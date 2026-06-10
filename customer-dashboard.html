@@ -1,0 +1,2728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KisaanConnect - Customer Dashboard</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#16a34a">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- ✅ Production env config: sets KISAAN_RENDER_URL for Vercel → Render routing -->
+    <script src="env-config.js"></script>
+    <!-- ✅ Network utility: auto-discovers server IP, handles Android/PWA/Browser -->
+    <script src="kisaan-network.js"></script>
+    <script>
+        // API_URL is set synchronously by kisaan-network.js above.
+        // KisaanNetwork.init() runs smart LAN discovery after DOM loads.
+
+        let host = (window.API_URL || '').replace('/api', '').replace('http://', '').split(':')[0];
+        function _refreshHost() { host = (window.API_URL || '').replace('/api', '').replace('http://', '').split(':')[0]; }
+
+        function loadSocketScript() {
+            return new Promise((resolve) => {
+                _refreshHost();
+                // In production (Vercel → Render), use the Render URL directly
+                let socketBase;
+                if (window.KISAAN_RENDER_URL && window.KISAAN_RENDER_URL.startsWith('https://')) {
+                    socketBase = window.KISAAN_RENDER_URL.replace(/\/$/, '');
+                } else {
+                    socketBase = `http://${host}:3000`;
+                }
+                const socketUrl = `${socketBase}/socket.io/socket.io.js`;
+                const script = document.createElement('script');
+                script.src = socketUrl;
+                script.onload = resolve;
+                script.onerror = () => {
+                    console.warn('[KisaanCustomer] Socket.io failed from ' + socketUrl);
+                    resolve();
+                };
+                document.head.appendChild(script);
+            });
+        }
+
+        async function shareApp() {
+            const serverBase = (window.API_URL || '').replace('/api', '') || window.location.origin;
+            const installUrl = serverBase + '/install';
+            const shareData = {
+                title: 'KisaanConnect App',
+                text: '🌾 Download the KisaanConnect app to buy fresh, organic farm produce directly from local farmers!',
+                url: installUrl
+            };
+
+            try {
+                if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                    await navigator.share(shareData);
+                } else {
+                    await navigator.clipboard.writeText(installUrl);
+                    showToast('📋 Link copied to clipboard! Share it with your friends 🌾');
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    try {
+                        await navigator.clipboard.writeText(installUrl);
+                        showToast('📋 Link copied to clipboard! Share it with your friends 🌾');
+                    } catch (e) {
+                        alert('Download Link: ' + installUrl);
+                    }
+                }
+            }
+        }
+
+        function showToast(message) {
+            let toast = document.getElementById('kisaan-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'kisaan-toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 80px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(15, 23, 42, 0.9);
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 50px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    z-index: 10000;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+                    opacity: 0;
+                    transition: opacity 0.3s ease, bottom 0.3s ease;
+                    pointer-events: none;
+                    text-align: center;
+                    white-space: nowrap;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    backdrop-filter: blur(10px);
+                `;
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.bottom = '90px';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.bottom = '80px';
+            }, 3000);
+        }
+    </script>
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-light: #10b981;
+            --primary-glow: rgba(5, 150, 105, 0.4);
+            --secondary: #10b981;
+            --accent: #fbbf24;
+            --bg: #f8fafc;
+            --bg-soft: #f0fdf4;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --glass: rgba(255, 255, 255, 0.4);
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: rgba(22, 163, 74, 0.1);
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 32px;
+            --shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --glass: rgba(15, 23, 42, 0.4);
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.05);
+            --shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            padding-bottom: 110px;
+            overflow-x: hidden;
+        }
+
+        .glass-header {
+            background: var(--glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .search-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 100%;
+            color: var(--text);
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .filter-chip {
+            padding: 8px 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: relative;
+            transform-origin: center;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(5, 150, 105, 0.15);
+            border-color: var(--primary);
+        }
+
+        .product-img-container {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .product-card:hover .product-img {
+            transform: scale(1.1);
+        }
+
+        .glass-chip {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .product-info {
+            padding: 15px;
+        }
+
+        .product-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .farmer-info {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 5px 0;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .wishlist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass);
+            backdrop-filter: blur(32px) saturate(200%);
+            -webkit-backdrop-filter: blur(32px) saturate(200%);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 10px;
+            padding: 10px 25px;
+            z-index: 1000;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            width: max-content;
+        }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 20px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 10px 20px var(--primary-glow);
+        }
+
+        .tab-btn i {
+            font-size: 22px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .post {
+            background: var(--card-bg);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .btn-p {
+            background: var(--primary);
+            color: white;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        .post {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        .sub-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        .market-ticker {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            position: sticky;
+            top: 70px;
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .ticker-content {
+            display: inline-block;
+            animation: ticker 45s linear infinite;
+        }
+
+        .ticker-item {
+            display: inline-block;
+            margin-right: 50px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .up {
+            color: var(--primary);
+        }
+
+        .down {
+            color: #f44336;
+        }
+
+        @keyframes ticker {
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-family: inherit;
+            resize: none;
+            outline: none;
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+    <!-- HEADER -->
+    <header class="glass-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div
+                style="width: 45px; height: 45px; background: var(--primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px var(--primary-glow);">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"
+                        fill="rgba(255,255,255,0.15)" />
+                    <path d="M12 3c0 0-4 3-4 8 0 2.5 1.2 4.7 3 6.1V20h2v-2.9c1.8-1.4 3-3.6 3-6.1 0-5-4-8-4-8z"
+                        fill="white" />
+                    <path d="M12 7v10M9 9.5c0 0 1.5 1 3 1s3-1 3-1M9 12c0 0 1.5 1 3 1s3-1 3-1"
+                        stroke="rgba(0,128,60,0.6)" stroke-width="1.2" stroke-linecap="round" />
+                </svg>
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.5px;">KisaanConnect</h1>
+                <div id="user-name-header"
+                    style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                    Loading...</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div id="server-status"
+                style="display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--text-muted); font-weight: 800; background: var(--bg-soft); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);">
+                <span id="connection-dot"
+                    style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 8px #16a34a;"></span>
+                <span>SERVER</span>
+            </div>
+            <!-- Wallet removed per user request -->
+            <div class="control-btn" onclick="shareApp()" title="Share App"
+                style="width: 45px; height: 45px; background: rgba(5, 150, 105, 0.1); color: var(--primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid rgba(5, 150, 105, 0.25);">
+                <i class="fas fa-share-nodes"></i></div>
+            <div class="control-btn" onclick="toggleTheme()"
+                style="width: 45px; height: 45px; background: var(--card-bg); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border);">
+                <i class="fas fa-moon" id="theme-icon"></i></div>
+            <div class="control-btn" onclick="handleLogout()"
+                style="width: 45px; height: 45px; background: #fff1f2; color: #e11d48; border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #fecdd3;">
+                <i class="fas fa-sign-out-alt"></i></div>
+        </div>
+    </header>
+
+    <div class="market-ticker">
+        <div class="ticker-content">
+            <span class="ticker-item">🌾 Wheat: ₹2400/q <span class="up">▲ 2%</span></span>
+            <span class="ticker-item">🍅 Tomato: ₹1200/q <span class="down">▼ 5%</span></span>
+            <span class="ticker-item">🥔 Potato: ₹1800/q <span class="up">▲ 1%</span></span>
+            <span class="ticker-item">🧅 Onion: ₹2100/q <span class="up">▲ 8%</span></span>
+            <span class="ticker-item">🍚 Rice (Basmati): ₹6500/q <span class="down">▼ 2%</span></span>
+            <span class="ticker-item">🌽 Maize: ₹2150/q <span class="up">▲ 3%</span></span>
+        </div>
+    </div>
+
+    <main class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <!-- HERO SECTION -->
+        <section id="hero-section" class="animate__animated animate__fadeIn" style="margin-bottom: 40px;">
+            <div
+                style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: var(--radius-lg); padding: 50px; position: relative; overflow: hidden; color: white; box-shadow: 0 30px 60px rgba(5, 150, 105, 0.2);">
+                <div style="position: relative; z-index: 2; max-width: 600px;">
+                    <h2 style="font-size: 42px; font-weight: 800; margin: 0; line-height: 1.1;">Fresh from Earth,
+                        <br><span style="color: var(--accent);">Direct to Home.</span></h2>
+                    <p style="font-size: 18px; opacity: 0.9; margin: 20px 0 30px 0;">Empowering local farmers and
+                        bringing the purest organic produce to your doorstep.</p>
+                    <div
+                        style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); padding: 8px; border-radius: 20px; display: flex; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                        <input type="text" id="product-search" placeholder="Search fresh vegetables, fruits..."
+                            oninput="filterProducts()"
+                            style="flex: 1; background: transparent; border: none; color: white; padding: 10px 20px; outline: none; font-size: 16px; font-family: inherit;">
+                        <button onclick="filterProducts()"
+                            style="background: white; color: var(--primary); border: none; padding: 12px 30px; border-radius: 14px; font-weight: 800; cursor: pointer;">Search</button>
+                    </div>
+                </div>
+                <i class="fas fa-leaf"
+                    style="position: absolute; right: -50px; bottom: -50px; font-size: 300px; opacity: 0.1; transform: rotate(-20deg);"></i>
+            </div>
+        </section>
+
+        <!-- MARKET SECTION -->
+        <div id="market-section" class="section active animate__animated animate__fadeIn">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; font-size: 28px; font-weight: 800;">Fresh Marketplace</h2>
+                <div class="filter-section" style="display: flex; gap: 10px; margin: 0;">
+                    <div class="filter-chip active" onclick="filterByCat('all')"
+                        style="cursor: pointer; padding: 10px 20px; border-radius: 12px; background: var(--primary); color: white; font-weight: 700;">
+                        All</div>
+                    <div class="filter-chip" onclick="openMapModal()"
+                        style="cursor: pointer; padding: 10px 20px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--border); font-weight: 700;">
+                        <i class="fas fa-map-marked-alt"></i> Near Me</div>
+                    <div class="filter-chip" onclick="filterByCat('price')"
+                        style="cursor: pointer; padding: 10px 20px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--border); font-weight: 700;">
+                        Under ₹30</div>
+                </div>
+            </div>
+            <div class="products-grid" id="products-grid"></div>
+        </div>
+
+        <!-- ORDERS SECTION -->
+        <div id="orders-section" class="section">
+            <h2 style="margin-bottom: 20px;">Order Status</h2>
+            <div id="quotes-list-container"></div>
+            <h2 style="margin: 40px 0 20px;">Order History</h2>
+            <div id="order-history-container"></div>
+        </div>
+
+        <!-- WISHLIST SECTION -->
+        <div id="wishlist-section" class="section">
+            <h2 style="margin-bottom: 20px;">My Wishlist</h2>
+            <div id="wishlist-grid" class="grid"></div>
+        </div>
+
+        <!-- COMMUNITY SECTION -->
+        <div id="community-section" class="section">
+            <h2 style="margin-bottom: 20px;">Community Board</h2>
+            <div class="card"
+                style="padding: 20px; background: var(--card-bg); border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
+                <textarea id="community-input" placeholder="Ask a question or share a tip..." rows="3"></textarea>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button class="btn btn-p" onclick="postToCommunity()"
+                        style="padding: 12px 25px; border-radius: 12px;">Post Message</button>
+                </div>
+            </div>
+            <div id="community-posts"></div>
+        </div>
+
+        <!-- SUBSCRIPTION SECTION -->
+        <div id="subs-section" class="section">
+            <h2 style="margin-bottom: 10px;">Weekly Subscription Box</h2>
+            <p style="color: var(--text-muted); margin-bottom: 30px;">Get your fresh produce delivered automatically
+                every week.</p>
+            <div id="subs-list"></div>
+            <div class="sub-card"
+                style="text-align: center; border: 2px dashed var(--primary); background: var(--bg-soft);">
+                <p style="margin: 0; font-weight: 600;">To subscribe, click the <i class="fas fa-sync-alt"></i> button
+                    on any product card.</p>
+            </div>
+        </div>
+
+        <!-- CALENDAR SECTION -->
+        <div id="calendar-section" class="section">
+            <h2 style="margin-bottom: 20px;">Planner & Calendar</h2>
+            <div id="calendar-grid" class="grid"
+                style="grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top:20px;"></div>
+            <div id="calendar-notes-list" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- PAYMENTS SECTION -->
+        <div id="payments-section" class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin:0;">💸 My Spending</h2>
+                <button onclick="loadCustomerPayments()"
+                    style="border-radius:12px; border:1px solid var(--border); padding:10px 18px; background:var(--card-bg); color:var(--text); cursor:pointer;"><i
+                        class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+            <!-- Total Spent Card -->
+            <div
+                style="background:linear-gradient(135deg,#059669,#10b981);color:white;border-radius:24px;padding:30px;margin-bottom:25px;position:relative;overflow:hidden;">
+                <div style="font-size:14px;font-weight:600;opacity:0.85;margin-bottom:6px;">Total Spent on Orders</div>
+                <div style="font-size:48px;font-weight:900;letter-spacing:-2px;">₹<span
+                        id="total-spent-disp">0.00</span></div>
+                <div style="font-size:13px;opacity:0.8;margin-top:6px;"><span id="txn-count">0</span> payments made
+                </div>
+                <i class="fas fa-receipt"
+                    style="position:absolute;right:-20px;bottom:-20px;font-size:130px;opacity:0.08;transform:rotate(-10deg);"></i>
+            </div>
+            <!-- Spending History -->
+            <h3 style="margin-bottom:15px;"><i class="fas fa-history"></i> Purchase History</h3>
+            <div id="customer-payments-list">
+                <div style="text-align:center;padding:30px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"
+                        style="font-size:24px;"></i>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Razorpay-Style Customer Payment Modal -->
+        <div id="cust-payment-modal"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+            <div
+                style="width:92%; max-width:480px; background:var(--card-bg); border-radius:24px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.4);">
+                <!-- Header -->
+                <div
+                    style="background:linear-gradient(135deg,#072654,#1a3a8f); padding:22px 24px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div
+                            style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+                            KisaanConnect Payments</div>
+                        <div style="color:white; font-size:22px; font-weight:900; margin-top:2px;">₹<span
+                                id="rzp-amount-disp">0.00</span></div>
+                    </div>
+                    <button onclick="document.getElementById('cust-payment-modal').style.display='none'"
+                        style="background:rgba(255,255,255,0.15); border:none; color:white; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:18px;">×</button>
+                </div>
+                <!-- Method Tabs -->
+                <div style="display:flex; border-bottom:2px solid var(--border); background:var(--bg);">
+                    <button onclick="rzpTab('upi')" id="tab-upi"
+                        style="flex:1; padding:12px 4px; border:none; background:transparent; font-size:11px; font-weight:800; cursor:pointer; color:#1a3a8f; border-bottom:3px solid #1a3a8f;">📱
+                        UPI</button>
+                    <button onclick="rzpTab('card')" id="tab-card"
+                        style="flex:1; padding:12px 4px; border:none; background:transparent; font-size:11px; font-weight:800; cursor:pointer; color:var(--text-muted); border-bottom:3px solid transparent;">💳
+                        Card</button>
+                    <button onclick="rzpTab('netbanking')" id="tab-netbanking"
+                        style="flex:1; padding:12px 4px; border:none; background:transparent; font-size:11px; font-weight:800; cursor:pointer; color:var(--text-muted); border-bottom:3px solid transparent;">🏦
+                        Bank</button>
+                    <button onclick="rzpTab('wallet')" id="tab-wallet"
+                        style="flex:1; padding:12px 4px; border:none; background:transparent; font-size:11px; font-weight:800; cursor:pointer; color:var(--text-muted); border-bottom:3px solid transparent;">👛
+                        Wallet</button>
+                    <button onclick="rzpTab('cash')" id="tab-cash"
+                        style="flex:1; padding:12px 4px; border:none; background:transparent; font-size:11px; font-weight:800; cursor:pointer; color:var(--text-muted); border-bottom:3px solid transparent;">💵
+                        COD</button>
+                </div>
+
+                <!-- UPI Panel -->
+                <div id="rzp-panel-upi" style="padding:24px;">
+                    <!-- UPI App Buttons -->
+                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;">
+                        <div onclick="rzpSelectApp('gpay')" id="app-gpay"
+                            style="border:2px solid var(--border); border-radius:16px; padding:14px 8px; text-align:center; cursor:pointer; transition:0.2s;"
+                            onmouseover="this.style.borderColor='#1a3a8f'" onmouseout="this.style.borderColor=''">
+                            <div style="font-size:26px;">G</div>
+                            <div style="font-size:10px; font-weight:700; margin-top:4px; color:var(--text-muted);">GPay
+                            </div>
+                        </div>
+                        <div onclick="rzpSelectApp('phonepe')" id="app-phonepe"
+                            style="border:2px solid var(--border); border-radius:16px; padding:14px 8px; text-align:center; cursor:pointer; transition:0.2s;"
+                            onmouseover="this.style.borderColor='#5f259f'" onmouseout="this.style.borderColor=''">
+                            <div style="font-size:26px;">Pe</div>
+                            <div style="font-size:10px; font-weight:700; margin-top:4px; color:var(--text-muted);">
+                                PhonePe</div>
+                        </div>
+                        <div onclick="rzpSelectApp('paytm')" id="app-paytm"
+                            style="border:2px solid var(--border); border-radius:16px; padding:14px 8px; text-align:center; cursor:pointer; transition:0.2s;"
+                            onmouseover="this.style.borderColor='#00b9f5'" onmouseout="this.style.borderColor=''">
+                            <div style="font-size:26px;">₿</div>
+                            <div style="font-size:10px; font-weight:700; margin-top:4px; color:var(--text-muted);">Paytm
+                            </div>
+                        </div>
+                        <div onclick="rzpSelectApp('bhim')" id="app-bhim"
+                            style="border:2px solid var(--border); border-radius:16px; padding:14px 8px; text-align:center; cursor:pointer; transition:0.2s;"
+                            onmouseover="this.style.borderColor='#e68a00'" onmouseout="this.style.borderColor=''">
+                            <div style="font-size:26px;">🇮🇳</div>
+                            <div style="font-size:10px; font-weight:700; margin-top:4px; color:var(--text-muted);">BHIM
+                            </div>
+                        </div>
+                    </div>
+                    <!-- QR Code Mock -->
+                    <div
+                        style="text-align:center; background:var(--bg); border-radius:16px; padding:20px; margin-bottom:16px;">
+                        <div
+                            style="width:130px; height:130px; margin:0 auto; border:3px solid #1a3a8f; border-radius:12px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; background:white;">
+                            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; padding:8px;">
+                                <script>for (let i = 0; i < 49; i++) { document.write('<div style="background:' + (Math.random() > 0.5 ? '#1a3a8f' : 'white') + ';aspect-ratio:1;border-radius:1px;"></div>'); }</script>
+                            </div>
+                            <div
+                                style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+                                <div style="background:white; padding:4px; border-radius:6px; font-size:18px;">🌾</div>
+                            </div>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:10px; font-weight:600;">Scan
+                            with any UPI app</div>
+                        <div style="font-size:13px; color:#1a3a8f; font-weight:800; margin-top:4px;">kisaanconnect@upi
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                        <div style="flex:1; height:1px; background:var(--border);"></div>
+                        <span style="font-size:12px; color:var(--text-muted); font-weight:700;">OR ENTER UPI ID</span>
+                        <div style="flex:1; height:1px; background:var(--border);"></div>
+                    </div>
+                    <input type="text" id="upi-id-input" placeholder="yourname@upi"
+                        style="width:100%; padding:13px 16px; border:2px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); font-size:14px; font-weight:600; outline:none; box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#1a3a8f'" onblur="this.style.borderColor=''">
+                    <div style="font-size:11px; color:var(--text-muted); margin:6px 0 16px; padding-left:4px;">Enter UPI
+                        ID linked to GPay, PhonePe, or BHIM</div>
+                    <input type="hidden" id="cust-pm-method" value="upi">
+                    <input type="hidden" id="cust-pm-desc" value="UPI Payment">
+                    <button onclick="submitCustPayment()"
+                        style="width:100%; padding:15px; border-radius:14px; font-weight:900; font-size:16px; background:linear-gradient(135deg,#1a3a8f,#3b5bd9); color:white; border:none; cursor:pointer; letter-spacing:0.5px;">Pay
+                        ₹<span class="rzp-pay-btn-amt">0</span> via UPI</button>
+                </div>
+
+                <!-- Card Panel -->
+                <div id="rzp-panel-card" style="padding:24px; display:none;">
+                    <div style="margin-bottom:14px;">
+                        <label
+                            style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Card
+                            Number</label>
+                        <input type="text" id="card-number" placeholder="0000 0000 0000 0000" maxlength="19"
+                            style="width:100%; margin-top:6px; padding:13px; border:2px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); font-size:15px; outline:none; box-sizing:border-box; letter-spacing:2px;"
+                            oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(.{4})/g,'$1 ').trim()"
+                            onfocus="this.style.borderColor='#1a3a8f'" onblur="this.style.borderColor=''">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div>
+                            <label
+                                style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Expiry</label>
+                            <input type="text" id="card-expiry" placeholder="MM / YY" maxlength="7"
+                                style="width:100%; margin-top:6px; padding:13px; border:2px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); font-size:15px; outline:none; box-sizing:border-box;"
+                                onfocus="this.style.borderColor='#1a3a8f'" onblur="this.style.borderColor=''">
+                        </div>
+                        <div>
+                            <label
+                                style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">CVV</label>
+                            <input type="password" id="card-cvv" placeholder="•••" maxlength="3"
+                                style="width:100%; margin-top:6px; padding:13px; border:2px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); font-size:15px; outline:none; box-sizing:border-box;"
+                                onfocus="this.style.borderColor='#1a3a8f'" onblur="this.style.borderColor=''">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label
+                            style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Name
+                            on Card</label>
+                        <input type="text" id="card-name" placeholder="RAVI KUMAR"
+                            style="width:100%; margin-top:6px; padding:13px; border:2px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); font-size:15px; outline:none; box-sizing:border-box; text-transform:uppercase;"
+                            onfocus="this.style.borderColor='#1a3a8f'" onblur="this.style.borderColor=''">
+                    </div>
+                    <div
+                        style="display:flex; align-items:center; gap:8px; margin-bottom:16px; padding:10px 14px; background:#f0fdf4; border-radius:10px;">
+                        <i class="fas fa-shield-alt" style="color:#059669;"></i>
+                        <span style="font-size:12px; color:#059669; font-weight:700;">256-bit SSL Secured · Visa ·
+                            Mastercard · RuPay</span>
+                    </div>
+                    <button onclick="submitCustPaymentCard()"
+                        style="width:100%; padding:15px; border-radius:14px; font-weight:900; font-size:16px; background:linear-gradient(135deg,#1a3a8f,#3b5bd9); color:white; border:none; cursor:pointer;">Pay
+                        ₹<span class="rzp-pay-btn-amt">0</span> via Card</button>
+                </div>
+
+                <!-- Net Banking Panel -->
+                <div id="rzp-panel-netbanking" style="padding:24px; display:none;">
+                    <label
+                        style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Select
+                        Your Bank</label>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0;">
+                        <div onclick="rzpSelectBank('SBI')" class="bank-opt"
+                            style="border:2px solid var(--border); border-radius:14px; padding:14px 8px; text-align:center; cursor:pointer;">
+                            <div style="font-size:13px; font-weight:800; color:#1a3a8f;">SBI</div>
+                        </div>
+                        <div onclick="rzpSelectBank('HDFC')" class="bank-opt"
+                            style="border:2px solid var(--border); border-radius:14px; padding:14px 8px; text-align:center; cursor:pointer;">
+                            <div style="font-size:13px; font-weight:800; color:#004c97;">HDFC</div>
+                        </div>
+                        <div onclick="rzpSelectBank('ICICI')" class="bank-opt"
+                            style="border:2px solid var(--border); border-radius:14px; padding:14px 8px; text-align:center; cursor:pointer;">
+                            <div style="font-size:13px; font-weight:800; color:#f26722;">ICICI</div>
+                        </div>
+                        <div onclick="rzpSelectBank('Axis')" class="bank-opt"
+                            style="border:2px solid var(--border); border-radius:14px; padding:14px 8px; text-align:center; cursor:pointer;">
+                            <div style="font-size:13px; font-weight:800; color:#800000;">Axis</div>
+                        </div>
+                        <div onclick="rzpSelectBank('Kotak')" class="bank-opt"
+                            style="border:2px solid var(--border); border-radius:14px; padding:14px 8px; text-align:center; cursor:pointer;">
+                            <div style="font-size:13px; font-weight:800; color:#ed1c24;">Kotak</div>
+                        </div>
+                        <div onclick="rzpSelectBank('PNB')" class="bank-opt"
+                            style="border:2px solid var(--border); border-radius:14px; padding:14px 8px; text-align:center; cursor:pointer;">
+                            <div style="font-size:13px; font-weight:800; color:#006400;">PNB</div>
+                        </div>
+                    </div>
+                    <select id="nb-bank-select"
+                        style="width:100%; padding:13px; border:2px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); font-size:14px; margin-bottom:16px;">
+                        <option value="">-- Other Banks --</option>
+                        <option>Bank of Baroda</option>
+                        <option>Canara Bank</option>
+                        <option>Union Bank</option>
+                        <option>IndusInd Bank</option>
+                        <option>Yes Bank</option>
+                    </select>
+                    <button onclick="submitCustPaymentNB()"
+                        style="width:100%; padding:15px; border-radius:14px; font-weight:900; font-size:16px; background:linear-gradient(135deg,#1a3a8f,#3b5bd9); color:white; border:none; cursor:pointer;">Proceed
+                        to Net Banking</button>
+                </div>
+
+                <!-- Wallet Panel -->
+                <div id="rzp-panel-wallet" style="padding:24px; display:none;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+                        <div onclick="rzpSelectWallet('paytm')"
+                            style="border:2px solid #00b9f5; border-radius:16px; padding:18px; text-align:center; cursor:pointer; background:rgba(0,185,245,0.05);">
+                            <div style="font-size:24px;">₿</div>
+                            <div style="font-weight:800; font-size:13px; color:#00b9f5; margin-top:6px;">Paytm</div>
+                        </div>
+                        <div onclick="rzpSelectWallet('amazon')"
+                            style="border:2px solid #ff9900; border-radius:16px; padding:18px; text-align:center; cursor:pointer; background:rgba(255,153,0,0.05);">
+                            <div style="font-size:24px;">🛒</div>
+                            <div style="font-weight:800; font-size:13px; color:#ff9900; margin-top:6px;">Amazon Pay
+                            </div>
+                        </div>
+                        <div onclick="rzpSelectWallet('mobikwik')"
+                            style="border:2px solid #7030a0; border-radius:16px; padding:18px; text-align:center; cursor:pointer; background:rgba(112,48,160,0.05);">
+                            <div style="font-size:24px;">Ⓜ</div>
+                            <div style="font-weight:800; font-size:13px; color:#7030a0; margin-top:6px;">MobiKwik</div>
+                        </div>
+                        <div onclick="rzpSelectWallet('freecharge')"
+                            style="border:2px solid #e63946; border-radius:16px; padding:18px; text-align:center; cursor:pointer; background:rgba(230,57,70,0.05);">
+                            <div style="font-size:24px;">⚡</div>
+                            <div style="font-weight:800; font-size:13px; color:#e63946; margin-top:6px;">FreeCharge
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="submitCustPaymentWallet()"
+                        style="width:100%; padding:15px; border-radius:14px; font-weight:900; font-size:16px; background:linear-gradient(135deg,#1a3a8f,#3b5bd9); color:white; border:none; cursor:pointer;">Pay
+                        via Wallet</button>
+                </div>
+
+                <!-- COD Panel -->
+                <div id="rzp-panel-cash" style="padding:24px; display:none;">
+                    <div style="text-align:center; padding:20px;">
+                        <div style="font-size:64px; margin-bottom:16px;">💵</div>
+                        <h3 style="margin:0 0 8px; font-size:20px; font-weight:900;">Cash on Delivery</h3>
+                        <p style="color:var(--text-muted); font-size:14px; line-height:1.6;">Pay ₹<span
+                                class="rzp-pay-btn-amt">0</span> in cash when your fresh produce is delivered to your
+                            doorstep.</p>
+                        <div
+                            style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:14px; padding:16px; margin:16px 0; text-align:left;">
+                            <div style="font-weight:700; color:#059669; margin-bottom:8px;"><i
+                                    class="fas fa-check-circle"></i> No advance payment required</div>
+                            <div style="font-weight:700; color:#059669; margin-bottom:8px;"><i
+                                    class="fas fa-check-circle"></i> Pay only on delivery</div>
+                            <div style="font-weight:700; color:#059669;"><i class="fas fa-check-circle"></i> Keep exact
+                                change ready</div>
+                        </div>
+                    </div>
+                    <button onclick="submitCustPaymentCOD()"
+                        style="width:100%; padding:15px; border-radius:14px; font-weight:900; font-size:16px; background:linear-gradient(135deg,#059669,#10b981); color:white; border:none; cursor:pointer;">Confirm
+                        Cash on Delivery</button>
+                </div>
+
+                <!-- Hidden amount input for submissions -->
+                <input type="hidden" id="cust-pm-amount" value="0">
+                <div style="padding:0 24px 16px; text-align:center;">
+                    <span style="font-size:11px; color:var(--text-muted);"><i class="fas fa-lock"></i> Secured by
+                        KisaanConnect · 256-bit encryption</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE SECTION -->
+        <div id="profile-section" class="section">
+            <h2 style="margin-bottom: 4px;">My Profile</h2>
+            <p style="color: var(--text-muted); margin-bottom: 28px;">View and update your personal details.</p>
+
+            <div class="card"
+                style="max-width: 600px; margin: 0 auto; padding: 40px; background: var(--card-bg); border-radius: 30px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+                <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 35px;">
+                    <div id="cust-avatar-container" onclick="document.getElementById('profile-upload-gal').click()"
+                        style="position: relative; cursor: pointer;">
+                        <div id="cust-avatar-circle"
+                            style="width: 100px; height: 100px; border-radius: 35px; background: linear-gradient(135deg, #6366f1, #ec4899); display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; font-weight: 800; box-shadow: 0 15px 35px rgba(99,102,241,0.3);">
+                            <span id="cust-avatar-letter">C</span>
+                            <img id="cust-avatar-img"
+                                style="width: 100%; height: 100%; object-fit: cover; display: none; border-radius: 35px;">
+                        </div>
+                        <input type="file" id="profile-upload-gal" hidden accept="image/*"
+                            onchange="uploadProfilePic(this)">
+                    </div>
+                    <div id="cust-profile-name"
+                        style="font-size: 24px; font-weight: 800; color: var(--text); margin-top: 15px;">Customer</div>
+
+                    <!-- Wallet removed per user request -->
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div>
+                        <label
+                            style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Full
+                            Name</label>
+                        <input id="cust-profile-name-input" type="text"
+                            style="width: 100%; margin-top: 6px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-weight: 600; outline: none;">
+                    </div>
+                    <div>
+                        <label
+                            style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Mobile
+                            Number</label>
+                        <input id="cust-profile-mobile" type="tel"
+                            style="width: 100%; margin-top: 6px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-weight: 600; outline: none;">
+                    </div>
+                    <div>
+                        <label
+                            style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Default
+                            Delivery Address</label>
+                        <input id="cust-profile-location" type="text"
+                            style="width: 100%; margin-top: 6px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-weight: 600; outline: none;">
+                    </div>
+
+                    <div
+                        style="background: var(--bg-soft); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-top: 10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div
+                                    style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                                    Pending Platform Fee</div>
+                                <div style="font-size: 24px; font-weight: 900; color: var(--primary);">₹<span
+                                        id="profile-pending-fee">0.00</span></div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size: 10px; color: var(--text-muted); font-weight: 700;">LIMIT: ₹1000
+                                </div>
+                                <div id="fee-status-badge"
+                                    style="font-size: 10px; padding: 4px 10px; border-radius: 50px; background: #d1fae5; color: #065f46; font-weight: 800; margin-top: 4px;">
+                                    SAFE</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; line-height: 1.4;">A 3%
+                            platform fee is charged on every order. Please clear your dues regularly to avoid portal
+                            lock.</p>
+                    </div>
+
+                    <button class="btn btn-p" onclick="saveProfile()"
+                        style="padding: 16px; font-size: 16px; border-radius: 15px; margin-top: 10px; font-weight: 800; background: linear-gradient(135deg, #16a34a, #22c55e); border: none; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);">
+                        <i class="fas fa-check"></i> Save Preferences
+                    </button>
+
+                    <button onclick="handleLogout()"
+                        style="width: 100%; padding: 14px; font-size: 14px; font-weight: 700; border-radius: 12px; background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; cursor: pointer; margin-top: 10px;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- LOCKED OVERLAY -->
+    <div id="locked-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(10px); color:white; text-align:center; padding:30px; flex-direction: column;">
+        <div style="max-width:500px; width: 100%;">
+            <i class="fas fa-lock" style="font-size:80px; color:#ef4444; margin-bottom:20px;"></i>
+            <h1 style="font-size:32px; font-weight:900; margin-bottom:10px;">Portal Locked</h1>
+            <p style="font-size:18px; opacity:0.9; margin-bottom:30px;">Your portal has been locked due to pending
+                platform fees. Clear your dues to unlock.</p>
+
+            <div
+                style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px; padding: 25px; margin-bottom: 30px;">
+                <div
+                    style="font-size: 13px; font-weight: 700; color: #fca5a5; text-transform: uppercase; letter-spacing: 1px;">
+                    Outstanding Amount</div>
+                <div style="font-size: 42px; font-weight: 900; color: white; margin: 10px 0;">₹<span
+                        id="lock-fee-amount">0.00</span></div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.7);"><i class="fas fa-info-circle"></i> Payments
+                    reflect instantly and unlock your account.</div>
+            </div>
+
+            <div style="display:flex; flex-direction: column; gap:15px;">
+                <button onclick="openPlatformFeeModal()"
+                    style="width:100%; padding:18px; border-radius:15px; border:none; background:linear-gradient(135deg, #059669, #10b981); color:white; font-weight:900; font-size: 18px; cursor:pointer; box-shadow: 0 10px 25px rgba(5, 150, 105, 0.4);"><i
+                        class="fas fa-unlock"></i> Pay Securely Now</button>
+                <button onclick="handleLogout()"
+                    style="width:100%; padding:15px; border-radius:15px; border:1px solid rgba(255,255,255,0.3); background:transparent; color:white; font-weight:800; cursor:pointer;">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLATFORM FEE PAYMENT MODAL -->
+    <div id="fee-pay-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+        <div
+            style="width:92%; max-width:420px; background:var(--card-bg); border-radius:24px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.5); display:flex; flex-direction:column;">
+            <div
+                style="background:linear-gradient(135deg,#1f2937,#111827); padding:20px 24px; display:flex; justify-content:space-between; align-items:center; color:white;">
+                <div>
+                    <div
+                        style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+                        Clear Dues</div>
+                    <div style="font-size:24px; font-weight:900; margin-top:4px;">₹<span id="fp-fee-amount">0.00</span>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('fee-pay-modal').style.display='none'"
+                    style="background:rgba(255,255,255,0.1); border:none; color:white; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:18px;">&times;</button>
+            </div>
+
+            <div style="padding:24px; flex:1;">
+                <div
+                    style="font-size:12px; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:16px;">
+                    Select Payment Method</div>
+
+                <div style="display:flex; flex-direction:column; gap:12px; margin-bottom: 24px;">
+                    <label class="fee-method-card"
+                        style="display:flex; align-items:center; padding:16px; border:2px solid var(--border); border-radius:14px; cursor:pointer; background:var(--bg);">
+                        <input type="radio" name="fee_method" value="upi" checked
+                            style="margin-right:15px; transform:scale(1.2);">
+                        <div style="display:flex; align-items:center; gap:15px; flex:1;">
+                            <div
+                                style="width:40px; height:40px; background:#f0fdf4; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#16a34a; font-size:20px;">
+                                <i class="fas fa-mobile-alt"></i></div>
+                            <div>
+                                <div style="font-weight:800; font-size:15px;">UPI Apps</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">GPay, PhonePe,
+                                    Paytm</div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="fee-method-card"
+                        style="display:flex; align-items:center; padding:16px; border:2px solid var(--border); border-radius:14px; cursor:pointer; background:var(--bg);">
+                        <input type="radio" name="fee_method" value="card"
+                            style="margin-right:15px; transform:scale(1.2);">
+                        <div style="display:flex; align-items:center; gap:15px; flex:1;">
+                            <div
+                                style="width:40px; height:40px; background:#eff6ff; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#2563eb; font-size:20px;">
+                                <i class="fas fa-credit-card"></i></div>
+                            <div>
+                                <div style="font-weight:800; font-size:15px;">Credit/Debit Card</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Visa, Mastercard,
+                                    RuPay</div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="fee-method-card"
+                        style="display:flex; align-items:center; padding:16px; border:2px solid var(--border); border-radius:14px; cursor:pointer; background:var(--bg);">
+                        <input type="radio" name="fee_method" value="netbanking"
+                            style="margin-right:15px; transform:scale(1.2);">
+                        <div style="display:flex; align-items:center; gap:15px; flex:1;">
+                            <div
+                                style="width:40px; height:40px; background:#fefce8; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#ca8a04; font-size:20px;">
+                                <i class="fas fa-university"></i></div>
+                            <div>
+                                <div style="font-weight:800; font-size:15px;">Net Banking</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">All Indian Banks
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <button onclick="submitPlatformFee()" id="fee-pay-btn"
+                    style="width:100%; padding:16px; border-radius:14px; font-weight:900; font-size:16px; background:linear-gradient(135deg,#059669,#10b981); color:white; border:none; cursor:pointer; box-shadow:0 8px 20px rgba(5,150,105,0.3); transition:0.2s;">
+                    <i class="fas fa-lock" style="margin-right:6px;"></i> Pay ₹<span id="fp-btn-amount">0.00</span>
+                </button>
+                <div style="text-align:center; margin-top:16px; font-size:11px; color:var(--text-muted);"><i
+                        class="fas fa-shield-alt" style="color:#059669;"></i> 256-bit Secure Encryption by KisaanConnect
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP MODAL -->
+    <div class="modal-overlay" id="map-modal">
+        <div class="modal" style="max-width: 900px; width: 95%; height: 85vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin:0; font-size: 24px; font-weight: 900; color: var(--primary);"><i
+                        class="fas fa-map-marked-alt"></i> Local Farmer Radar</h2>
+                <button onclick="closeMapModal()"
+                    style="background:none; border:none; font-size: 20px; cursor:pointer;"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div id="map"
+                style="flex: 1; border-radius: 20px; border: 1px solid var(--border); min-height: 300px; background: #eee;">
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB BAR -->
+    <nav class="tab-bar">
+        <a class="tab-btn active" onclick="switchSection('market')"><i
+                class="fas fa-shopping-basket"></i><span>Shop</span></a>
+        <a class="tab-btn" onclick="switchSection('orders')"><i
+                class="fas fa-clipboard-list"></i><span>Orders</span></a>
+        <a class="tab-btn" onclick="switchSection('wishlist')"><i class="fas fa-heart"></i><span>Wishlist</span></a>
+        <a class="tab-btn" onclick="switchSection('community')"><i class="fas fa-users"></i><span>Board</span></a>
+        <a class="tab-btn" onclick="switchSection('subs')"><i class="fas fa-sync-alt"></i><span>Subs</span></a>
+        <a class="tab-btn" onclick="switchSection('calendar')"><i
+                class="fas fa-calendar-alt"></i><span>Planner</span></a>
+        <a class="tab-btn" onclick="switchSection('payments')"><i class="fas fa-wallet"></i><span>Payments</span></a>
+        <a class="tab-btn" onclick="switchSection('profile')"><i class="fas fa-user-circle"></i><span>Profile</span></a>
+    </nav>
+
+    <!-- QUOTE MODAL -->
+    <div class="modal-overlay" id="quote-modal">
+        <div class="modal">
+            <h3 id="modal-product-name">Send Quote Request</h3>
+            <p id="modal-farmer-name" style="font-size: 14px; color: var(--text-muted)"></p>
+            <div style="margin: 20px 0;">
+                <label>Market Price: <b id="market-price-display"
+                        style="color: var(--primary);">₹0/kg</b></label><br><br>
+                <label>Quantity (kg)</label>
+                <input type="number" id="q-qty" value="1" oninput="updateQuoteCalc()"
+                    style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:15px; outline: none;">
+                <label>Offered Price (₹/kg)</label>
+                <input type="number" id="q-price" value="0" oninput="updateQuoteCalc()"
+                    style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:15px; outline: none;">
+                <div id="bargain-badge"
+                    style="margin-bottom: 15px; padding: 10px; border-radius: 8px; background: #f8f9fa; display: none; align-items: center; gap: 10px;">
+                    <i class="fas fa-handshake"></i>
+                    <span id="bargain-text" style="font-size: 13px; font-weight: 600;"></span>
+                </div>
+
+                <div style="padding: 15px; background: var(--bg-soft); border-radius: 10px; text-align: right;">
+                    <span style="font-weight: 600;">Total: <span id="total-price-display"
+                            style="font-size: 20px; color: var(--primary); font-weight: 800;">₹0</span></span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-p" style="flex:1" onclick="sendQuote()">Send Request</button>
+                <button class="btn" style="flex:1; border:1px solid var(--border)"
+                    onclick="closeQuoteModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRACKING MODAL -->
+    <div class="modal-overlay" id="track-modal">
+        <div class="modal">
+            <h3>Live Tracking</h3>
+            <div style="height: 250px; background: #eee; border-radius: 12px; margin-top: 15px;">
+                <iframe id="map-iframe" width="100%" height="100%" frameborder="0" src=""></iframe>
+            </div>
+            <button class="btn btn-p" style="width:100%; margin-top:20px;"
+                onclick="document.getElementById('track-modal').style.display='none'">Close</button>
+        </div>
+    </div>
+
+    <!-- SUBSCRIPTION MODAL -->
+    <div class="modal-overlay" id="sub-modal">
+        <div class="modal">
+            <h3 id="sub-modal-title">Weekly Subscription</h3>
+            <div style="margin: 20px 0;">
+                <label>Delivery Day</label>
+                <select id="s-day"
+                    style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:15px; background: white;">
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+                <label>Quantity (kg)</label>
+                <input type="number" id="s-qty" value="2"
+                    style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:15px;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-p" style="flex:1" onclick="confirmSubscription()">Subscribe Now</button>
+                <button class="btn" style="flex:1; border:1px solid var(--border)"
+                    onclick="document.getElementById('sub-modal').style.display='none'">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLIPKART-STYLE ORDER PAYMENT MODAL -->
+    <div id="order-pay-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+        <div
+            style="width:92%; max-width:480px; background:var(--card-bg); border-radius:24px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.4); max-height:92vh; display:flex; flex-direction:column;">
+            <!-- Header -->
+            <div
+                style="background:linear-gradient(135deg,#f97316,#fb923c); padding:20px 24px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                <div>
+                    <div
+                        style="color:rgba(255,255,255,0.85); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+                        🎉 Farmer Accepted! Pay Now</div>
+                    <div style="color:white; font-size:26px; font-weight:900; margin-top:4px;">₹<span
+                            id="fp-amount">0</span></div>
+                    <div style="color:rgba(255,255,255,0.8); font-size:12px; margin-top:2px;" id="fp-product-name">Order
+                        Payment</div>
+                </div>
+                <button onclick="document.getElementById('order-pay-modal').style.display='none'"
+                    style="background:rgba(255,255,255,0.15); border:none; color:white; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:18px;">×</button>
+            </div>
+            <!-- Order Summary -->
+            <div style="padding:14px 24px; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0;">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">
+                    <div>
+                        <div style="font-size:10px; color:var(--text-muted); font-weight:700;">QUANTITY</div>
+                        <div style="font-weight:800; margin-top:3px; font-size:14px;" id="fp-qty">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px; color:var(--text-muted); font-weight:700;">PRICE/KG</div>
+                        <div style="font-weight:800; margin-top:3px; font-size:14px;" id="fp-rate">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px; color:var(--text-muted); font-weight:700;">FARMER</div>
+                        <div style="font-weight:800; margin-top:3px; font-size:12px;" id="fp-farmer">—</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Farmer Payment Info -->
+            <div id="fp-farmer-info"
+                style="padding:10px 24px; background:var(--bg); border-bottom:1px solid var(--border); flex-shrink:0;">
+            </div>
+            <!-- Scrollable body -->
+            <div style="padding:18px 24px; overflow-y:auto; flex:1;">
+                <div
+                    style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--text-muted); margin-bottom:12px; letter-spacing:0.5px;">
+                    Choose Payment Method</div>
+                <!-- Method Tiles -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+                    <div id="fp-upi" onclick="fpSelectMethod('upi',this)"
+                        style="border:2px solid var(--border); border-radius:14px; padding:14px; text-align:center; cursor:pointer; transition:0.2s;">
+                        <div style="font-size:22px;">📱</div>
+                        <div style="font-size:12px; font-weight:800; margin-top:4px;">UPI</div>
+                        <div style="font-size:10px; color:var(--text-muted);">GPay · PhonePe · Paytm</div>
+                    </div>
+                    <div id="fp-card" onclick="fpSelectMethod('card',this)"
+                        style="border:2px solid var(--border); border-radius:14px; padding:14px; text-align:center; cursor:pointer; transition:0.2s;">
+                        <div style="font-size:22px;">💳</div>
+                        <div style="font-size:12px; font-weight:800; margin-top:4px;">Card</div>
+                        <div style="font-size:10px; color:var(--text-muted);">Debit / Credit</div>
+                    </div>
+                    <div id="fp-netbanking" onclick="fpSelectMethod('netbanking',this)"
+                        style="border:2px solid var(--border); border-radius:14px; padding:14px; text-align:center; cursor:pointer; transition:0.2s;">
+                        <div style="font-size:22px;">🏦</div>
+                        <div style="font-size:12px; font-weight:800; margin-top:4px;">Net Banking</div>
+                        <div style="font-size:10px; color:var(--text-muted);">All Banks</div>
+                    </div>
+                    <div id="fp-cod" onclick="fpSelectMethod('cash',this)"
+                        style="border:2px solid var(--border); border-radius:14px; padding:14px; text-align:center; cursor:pointer; transition:0.2s;">
+                        <div style="font-size:22px;">💵</div>
+                        <div style="font-size:12px; font-weight:800; margin-top:4px;">Cash on Delivery</div>
+                        <div style="font-size:10px; color:var(--text-muted);">Pay on receipt</div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Action Panel — changes based on selected method -->
+                <div id="fp-action-panel" style="margin-bottom:14px;"></div>
+
+                <input type="hidden" id="fp-selected-method" value="upi">
+                <input type="hidden" id="fp-quote-id" value="">
+                <button onclick="submitOrderPayment()" id="fp-confirm-btn"
+                    style="display:none; width:100%; padding:16px; border-radius:14px; font-weight:900; font-size:16px; background:linear-gradient(135deg,#059669,#10b981); color:white; border:none; cursor:pointer; letter-spacing:0.5px;">
+                    <i class="fas fa-check-circle" style="margin-right:6px;"></i>I've Paid — Confirm Order
+                </button>
+                <div style="text-align:center; margin-top:10px; font-size:11px; color:var(--text-muted);"><i
+                        class="fas fa-shield-alt"></i> 100% Secure · Powered by KisaanConnect</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Robust API URL detection for local file access
+        // API_URL already defined in head script
+
+        let currentUser = JSON.parse(sessionStorage.getItem('current_user'));
+        if (!currentUser || currentUser.role !== 'customer') window.location.href = 'index.html';
+
+        let products = [];
+        let quotes = [];
+        let subscriptions = [];
+        let selectedProduct = null;
+        let currentLang = localStorage.getItem('kisaan_lang') || 'en';
+        let calendarNotes = {};
+        let map = null;
+        let markers = [];
+
+        const translations = {
+            en: { shop: "Shop", orders: "Orders", wishlist: "Wishlist", board: "Board", subs: "Subs", exit: "Exit", search: "Search...", order_status: "Order Status", history: "History", community: "Community Board", sub_title: "Subscription", filter_all: "All", filter_near: "Near Me", filter_price: "< ₹30", filter_top: "Top", post_btn: "Post" },
+            hi: { shop: "दुकान", orders: "ऑर्डर", wishlist: "इच्छासूची", board: "बोर्ड", subs: "सब्स", exit: "निकास", search: "खोजें...", order_status: "ऑर्डर की स्थिति", history: "इतिहास", community: "सामुदायिक बोर्ड", sub_title: "सदस्यता", filter_all: "सभी", filter_near: "पास", filter_price: "< ₹30", filter_top: "टॉप", post_btn: "भेजें" }
+        };
+
+        async function init() {
+            await loadSocketScript();
+            const id = currentUser.id;
+            document.getElementById('user-name-header').textContent = currentUser.name;
+            try {
+                const [pRes, qRes, uRes, subRes, calRes] = await Promise.all([
+                    fetch(`${API_URL}/products`),
+                    fetch(`${API_URL}/quotes?customerId=${id}`),
+                    fetch(`${API_URL}/users/${id}`),
+                    fetch(`${API_URL}/subscriptions?customerId=${id}`),
+                    fetch(`${API_URL}/calendar_notes/${id}`)
+                ]);
+
+                products = await pRes.json();
+                quotes = await qRes.json();
+                subscriptions = await subRes.json();
+                calendarNotes = await calRes.json();
+                const freshUser = await uRes.json();
+
+                currentUser = { ...currentUser, ...freshUser };
+                sessionStorage.setItem('current_user', JSON.stringify(currentUser));
+
+                // Check Lock Status
+                if (currentUser.is_locked) {
+                    document.getElementById('locked-overlay').style.display = 'flex';
+                    fetchAdminPaymentDetails();
+                }
+
+                const walletEl = document.getElementById('wallet-balance-disp');
+                if (walletEl) walletEl.textContent = (currentUser.wallet || 0).toFixed(2);
+                // Fix: update all name displays with fresh data
+                const headerName = document.getElementById('user-name-header');
+                const profileName = document.getElementById('cust-profile-name');
+                if (headerName) headerName.textContent = currentUser.name;
+                if (profileName) profileName.textContent = currentUser.name;
+                // Update avatar initials
+                const avatarLetter = document.getElementById('cust-avatar-letter');
+                if (avatarLetter && !currentUser.profilePic) {
+                    avatarLetter.textContent = (currentUser.name || 'C').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                }
+            } catch (e) { console.error("Init error:", e); }
+
+            renderProducts(products);
+            renderQuotes();
+            renderOrders();
+            renderWishlist();
+            renderPosts();
+            renderSubs();
+            renderCalendar();
+            updateUIStrings();
+            checkServer();
+
+            // Socket setup for real-time quote notifications
+            if (typeof io !== 'undefined') {
+                const socket = io(`http://${host}:3000`);
+                socket.emit('join', currentUser.id);
+                socket.on('quote_accepted', (data) => {
+                    const acceptedQuote = quotes.find(q => q.id == data.id);
+                    if (acceptedQuote) {
+                        showFlipkartPayModal(acceptedQuote);
+                    } else {
+                        // Re-fetch and show notification
+                        fetch(`${API_URL}/quotes?customerId=${currentUser.id}`)
+                            .then(r => r.json())
+                            .then(freshQuotes => {
+                                quotes = freshQuotes;
+                                const q = freshQuotes.find(q => q.id == data.id);
+                                if (q) showFlipkartPayModal(q);
+                            });
+                    }
+                    renderQuotes();
+                });
+            }
+        }
+
+        function showLockScreen() {
+            const overlay = document.getElementById('locked-overlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                const fee = currentUser.pending_platform_fee || 0;
+                document.getElementById('lock-fee-amount').textContent = fee.toFixed(2);
+            }
+        }
+
+        function openPlatformFeeModal() {
+            const fee = currentUser.pending_platform_fee || 0;
+            document.getElementById('fp-fee-amount').textContent = fee.toFixed(2);
+            document.getElementById('fp-btn-amount').textContent = fee.toFixed(2);
+            document.getElementById('fee-pay-modal').style.display = 'flex';
+
+            // Add listeners for radio buttons to highlight selected card
+            document.querySelectorAll('input[name="fee_method"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    document.querySelectorAll('.fee-method-card').forEach(card => {
+                        card.style.borderColor = 'var(--border)';
+                        card.style.background = 'var(--bg)';
+                    });
+                    if (this.checked) {
+                        this.parentElement.style.borderColor = '#10b981';
+                        this.parentElement.style.background = '#f0fdf4';
+                    }
+                });
+            });
+        }
+
+        async function submitPlatformFee() {
+            const btn = document.getElementById('fee-pay-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            const fee = currentUser.pending_platform_fee || 0;
+            const method = document.querySelector('input[name="fee_method"]:checked').value;
+
+            try {
+                // Simulate payment gateway delay
+                await new Promise(r => setTimeout(r, 1500));
+
+                const res = await fetch(`${API_URL}/pay-pending-fee`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.id,
+                        amount: fee,
+                        method: method,
+                        email: currentUser.email,
+                        name: currentUser.name
+                    })
+                });
+
+                if (res.ok) {
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> Payment Successful!';
+                    btn.style.background = '#059669';
+
+                    // Update session user
+                    currentUser.pending_platform_fee = 0;
+                    currentUser.is_locked = 0;
+                    sessionStorage.setItem('current_user', JSON.stringify(currentUser));
+
+                    setTimeout(() => {
+                        alert("Payment successful! Your account is now unlocked. A receipt has been sent to your email.");
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error("Payment failed on server.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Payment processing failed. Please try again.");
+                btn.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;"></i> Pay ₹' + fee.toFixed(2);
+                btn.disabled = false;
+            }
+        }
+
+        function switchSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id + '-section').classList.add('active');
+
+            // Toggle Hero Section (Search Bar) - Only show on home
+            const hero = document.getElementById('hero-section');
+            if (hero) hero.style.display = (id === 'market') ? 'block' : 'none';
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            // Fix: find the correct button to activate
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(btn => {
+                if (btn.onclick.toString().includes(id)) btn.classList.add('active');
+            });
+
+            if (id === 'profile') loadProfile();
+            if (id === 'payments') loadCustomerPayments();
+            if (id === 'wishlist') renderWishlist();
+            if (id === 'subs') {
+                // Re-fetch subscriptions on every navigation
+                fetch(`${API_URL}/subscriptions?customerId=${currentUser.id}`)
+                    .then(r => r.json())
+                    .then(data => { subscriptions = data; renderSubs(); })
+                    .catch(() => renderSubs());
+            }
+        }
+
+        function filterProducts() {
+            const query = document.getElementById('product-search').value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+            renderProducts(filtered);
+        }
+
+        function filterByCat(cat) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            let filtered = products;
+            if (cat === 'price') filtered = products.filter(p => p.price <= 30);
+            renderProducts(filtered);
+        }
+
+        function renderProducts(list) {
+            const container = document.getElementById('products-grid');
+            container.innerHTML = list.length ? '' : '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-muted);">No products found matching your search.</div>';
+
+            list.forEach((p, index) => {
+                const isFresh = index % 3 === 0;
+                const wishlist = getWishlist ? getWishlist() : [];
+                const isWished = wishlist.includes(p.id);
+                container.innerHTML += `
+                    <div class="product-card animate__animated animate__fadeInUp" style="animation-delay: ${index * 0.1}s">
+                        <div class="product-img-container" style="position:relative;">
+                            <img src="${p.images ? p.images[0] : 'veggies.png'}" class="product-img">
+                            ${isFresh ? '<div class="glass-chip">FEATURED</div>' : ''}
+                            <button data-wish-id="${p.id}" onclick="toggleWishlist(${p.id})" title="Add to Wishlist"
+                                style="position:absolute;top:10px;right:10px;background:white;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.18);z-index:5;">
+                                ${isWished ? '<i class="fas fa-heart" style="color:#ef4444;"></i>' : '<i class="far fa-heart" style="color:#ef4444;"></i>'}
+                            </button>
+                        </div>
+                        <div class="product-info" style="padding: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <span style="font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">${p.location}</span>
+                            </div>
+                            <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 800;">${p.name}</h3>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">By ${p.farmerName}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 20px; font-weight: 800; color: var(--primary);">₹${p.price}<span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">/kg</span></div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn" onclick="openSubModal(${p.id})" style="width: 38px; height: 38px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); color: var(--primary);"><i class="fas fa-sync-alt"></i></button>
+                                    <button class="btn btn-p" onclick="openQuoteModal(${p.id})" style="padding: 10px 20px; border-radius: 12px; font-weight: 700;">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openProductDetail(id) {
+            // Opens the buy modal (same as Buy Now) — a dedicated product page can be added later
+            openQuoteModal(id);
+        }
+
+        function openQuoteModal(id) {
+            selectedProduct = products.find(p => p.id === id);
+            document.getElementById('modal-product-name').textContent = selectedProduct.name;
+            document.getElementById('modal-farmer-name').textContent = `Farmer: ${selectedProduct.farmerName}`;
+            document.getElementById('market-price-display').textContent = `₹${selectedProduct.price}/kg`;
+            document.getElementById('q-price').value = selectedProduct.price;
+            document.getElementById('quote-modal').style.display = 'flex';
+            updateQuoteCalc();
+        }
+
+        function updateQuoteCalc() {
+            const qty = parseFloat(document.getElementById('q-qty').value) || 0;
+            const price = parseFloat(document.getElementById('q-price').value) || 0;
+            document.getElementById('total-price-display').textContent = `₹${(qty * price).toFixed(2)}`;
+        }
+
+        function closeQuoteModal() { document.getElementById('quote-modal').style.display = 'none'; }
+
+        async function sendQuote() {
+            const qty = document.getElementById('q-qty').value;
+            const price = document.getElementById('q-price').value;
+
+            const newQuote = {
+                productId: selectedProduct.id,
+                productName: selectedProduct.name,
+                farmerId: selectedProduct.farmerId,
+                farmerName: selectedProduct.farmerName,
+                farmerMobile: selectedProduct.farmerMobile,
+                farmerLocation: selectedProduct.location,
+                customerId: currentUser.id,
+                customerName: currentUser.name,
+                customerMobile: currentUser.mobile,
+                customerLocation: currentUser.location,
+                quantity: qty,
+                offerPrice: price,
+                needDriver: false,
+                status: 'pending'
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/quotes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newQuote)
+                });
+                if (res.ok) {
+                    alert("Quote request sent!");
+                    closeQuoteModal();
+                    init();
+                }
+            } catch (e) { alert("Error sending quote."); }
+        }
+
+        function renderQuotes() {
+            const container = document.getElementById('quotes-list-container');
+            const active = quotes.filter(q => q.status !== 'completed');
+            if (!active.length) {
+                container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-file-invoice" style="font-size:48px;opacity:0.2;display:block;margin-bottom:15px;"></i><p>No active orders yet.</p><button class="btn btn-p" onclick="switchSection('market')" style="margin-top:10px;border-radius:12px;">Browse Products</button></div>`;
+                return;
+            }
+            container.innerHTML = '';
+            active.forEach(q => {
+                const isPaid = q.paid == 1 || q.paid === true;
+                const total = (parseFloat(q.offerPrice || 0) * parseFloat(q.quantity || 0)).toFixed(2);
+                let borderColor = '#f59e0b', statusBg = '#fef3c7', statusColor = '#f59e0b', statusLabel = '&#x23F3; Pending';
+                if (q.status === 'yes' && !isPaid) { borderColor = '#16a34a'; statusBg = '#d1fae5'; statusColor = '#16a34a'; statusLabel = '&#x2705; Accepted &mdash; Pay Now'; }
+                else if (q.status === 'yes' && isPaid) { borderColor = '#6366f1'; statusBg = '#ede9fe'; statusColor = '#6366f1'; statusLabel = '&#x1F49C; Paid'; }
+                else if (q.status === 'no') { borderColor = '#ef4444'; statusBg = '#fee2e2'; statusColor = '#ef4444'; statusLabel = '&#x274C; Rejected'; }
+
+                container.innerHTML += `
+                    <div style="background:var(--card-bg);border:1px solid var(--border);border-left:5px solid ${borderColor};border-radius:16px;padding:20px;margin-bottom:15px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                            <div>
+                                <h3 style="margin:0;font-size:18px;font-weight:800;">${q.productName}</h3>
+                                <div style="font-size:13px;color:var(--text-muted);margin-top:3px;">Farmer: <b>${q.farmerName || 'N/A'}</b></div>
+                            </div>
+                            <div style="background:${statusBg};color:${statusColor};padding:5px 14px;border-radius:50px;font-size:12px;font-weight:800;">${statusLabel}</div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:var(--bg);padding:15px;border-radius:12px;font-size:13px;">
+                            <div><span style="color:var(--text-muted);font-size:11px;">QUANTITY</span><br><b>${q.quantity} kg</b></div>
+                            <div><span style="color:var(--text-muted);font-size:11px;">PRICE/KG</span><br><b style="color:var(--primary);">₹${q.offerPrice}</b></div>
+                            <div><span style="color:var(--text-muted);font-size:11px;">TOTAL</span><br><b>₹${total}</b></div>
+                        </div>
+                        ${q.status === 'yes' && !isPaid ? `
+                            <div style="margin-top:12px;padding:12px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0;">
+                                <div style="font-weight:700;color:#16a34a;font-size:13px;"><i class="fas fa-check-circle"></i> Farmer accepted! Complete your payment to confirm the order.</div>
+                            </div>
+                            <button style="margin-top:12px;width:100%;padding:15px;border-radius:14px;font-weight:900;font-size:16px;background:linear-gradient(135deg,#f97316,#fb923c);color:white;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(249,115,22,0.35);" onclick="openPayForQuote(${q.id})">
+                                <i class="fas fa-lock"></i> Pay ₹${total} Now
+                            </button>
+                        ` : ''}
+                        ${isPaid ? `
+                            <div style="margin-top:12px;padding:12px;background:#ede9fe;border-radius:12px;display:flex;justify-content:space-between;align-items:center;">
+                                <span style="color:#6366f1;font-weight:800;font-size:13px;"><i class="fas fa-check-double"></i> Paid via ${(q.paymentMethod || '').toUpperCase() || 'N/A'}</span>
+                                <button onclick="rateOrder(${q.id})" style="padding:8px 16px;border-radius:10px;background:#6366f1;color:white;border:none;cursor:pointer;font-weight:700;font-size:12px;"><i class="fas fa-star"></i> Rate</button>
+                            </div>
+                        ` : ''}
+                        ${q.status === 'no' ? `<div style="margin-top:12px;padding:12px;background:#fee2e2;border-radius:12px;font-size:13px;color:#ef4444;"><i class="fas fa-info-circle"></i> Quote declined. Try a different price or product.</div>` : ''}
+                    </div>`;
+            });
+        }
+
+
+        async function renderOrders() {
+            const container = document.getElementById('order-history-container');
+            try {
+                const res = await fetch(`${API_URL}/orders?customerId=${currentUser.id}`);
+                const orderList = await res.json();
+                if (!orderList.length) {
+                    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-box-open" style="font-size:48px;opacity:0.2;display:block;margin-bottom:15px;"></i><p>No completed orders yet.</p></div>`;
+                    return;
+                }
+                container.innerHTML = '';
+                orderList.forEach(o => {
+                    const statusColor = o.deliveryStatus === 'delivered' ? '#16a34a' : (o.deliveryStatus === 'accepted' ? '#0369a1' : '#f59e0b');
+                    const statusLabel = o.deliveryStatus === 'delivered' ? 'Delivered' : (o.deliveryStatus === 'accepted' ? 'In Transit' : 'Processing');
+                    const date = o.deliveredAt ? new Date(o.deliveredAt).toLocaleDateString('en-IN') : (o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN') : 'Pending');
+                    container.innerHTML += `
+                        <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:15px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                <div>
+                                    <h3 style="margin:0;font-size:17px;font-weight:800;">${o.productName}</h3>
+                                    <div style="font-size:12px;color:var(--text-muted);"><i class="fas fa-calendar"></i> ${date}</div>
+                                </div>
+                                <div style="background:${statusColor}20;color:${statusColor};padding:5px 14px;border-radius:50px;font-size:12px;font-weight:800;">${statusLabel}</div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--bg);padding:12px;border-radius:12px;font-size:13px;">
+                                <div><span style="color:var(--text-muted);font-size:11px;">QUANTITY</span><br><b>${o.quantity} kg</b></div>
+                                <div><span style="color:var(--text-muted);font-size:11px;">TOTAL PAID</span><br><b style="color:var(--primary);">₹${parseFloat(o.price || 0).toFixed(0)}</b></div>
+                            </div>
+                            ${'★'.repeat(parseInt(o.rating) || 0)}<span style="color:var(--text-muted);"> ${'☆'.repeat(5 - (parseInt(o.rating) || 0))}</span>
+                        </div>`;
+                });
+            } catch (e) { container.innerHTML = '<p style="color:#ef4444;">Error loading orders.</p>'; }
+        }
+
+        async function rateOrder(id) {
+            const rating = prompt("Rate (1-5):", "5");
+            if (!rating) return;
+            const q = quotes.find(item => item.id == id);
+            try {
+                await fetch(`${API_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        farmerId: q.farmerId, customerId: currentUser.id,
+                        productName: q.productName, quantity: q.quantity,
+                        price: q.offerPrice * q.quantity, rating: rating
+                    })
+                });
+                await fetch(`${API_URL}/quotes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'completed' }) });
+                init();
+            } catch (e) { alert("Error completing order."); }
+        }
+
+        function renderSubs() {
+            const container = document.getElementById('subs-list');
+            if (!subscriptions.length) {
+                container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted);"><i class="fas fa-sync-alt" style="font-size:40px;opacity:0.2;display:block;margin-bottom:12px;"></i><p>No subscriptions yet. Click the <i class="fas fa-sync-alt"></i> button on any product to subscribe.</p></div>`;
+                return;
+            }
+            container.innerHTML = '';
+            subscriptions.forEach(s => {
+                const statusMap = { pending: { color: '#f59e0b', bg: '#fef3c7', label: 'Pending Approval' }, approved: { color: '#16a34a', bg: '#d1fae5', label: 'Active ✅' }, rejected: { color: '#ef4444', bg: '#fee2e2', label: 'Rejected' } };
+                const st = statusMap[s.status] || statusMap.pending;
+                // Find the product for extra details
+                const prod = products.find(p => p.id == s.productId) || {};
+                const imgSrc = prod.images && prod.images.length ? prod.images[0] : 'https://images.unsplash.com/photo-1518977676601-b53f02bad67b?auto=format&fit=crop&w=400';
+                container.innerHTML += `
+                    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:20px;">
+                        <div style="display:grid;grid-template-columns:120px 1fr;">
+                            <img src="${imgSrc}" style="width:100%;height:120px;object-fit:cover;">
+                            <div style="padding:18px;">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                                    <div>
+                                        <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;">${s.productName}</h3>
+                                        <div style="font-size:12px;color:var(--text-muted);">By ${prod.farmerName || s.farmerName || 'Farmer'}</div>
+                                    </div>
+                                    <div style="background:${st.bg};color:${st.color};padding:4px 12px;border-radius:50px;font-size:11px;font-weight:800;">${st.label}</div>
+                                </div>
+                                <div style="display:flex;gap:15px;margin-top:12px;font-size:13px;">
+                                    <div><i class="fas fa-calendar-week" style="color:var(--primary);"></i> Every <b>${s.day}</b></div>
+                                    <div><i class="fas fa-weight-hanging" style="color:var(--primary);"></i> <b>${s.quantity} kg</b>/week</div>
+                                    ${prod.price ? `<div><i class="fas fa-tag" style="color:var(--primary);"></i> ~₹<b>${(prod.price * s.quantity).toFixed(0)}</b>/week</div>` : ''}
+                                </div>
+                                <button class="btn" style="margin-top:12px;background:#fee2e2;color:#ef4444;border:none;border-radius:10px;padding:6px 15px;font-size:12px;font-weight:700;" onclick="cancelSub(${s.id})">Cancel Subscription</button>
+                            </div>
+                        </div>
+                        ${s.status === 'rejected' && s.farmerReason ? `<div style="padding:12px 18px;background:#fee2e2;font-size:13px;color:#ef4444;"><i class="fas fa-info-circle"></i> Reason: ${s.farmerReason}</div>` : ''}
+                    </div>`;
+            });
+        }
+
+        async function cancelSub(id) {
+            if (confirm("Cancel subscription?")) {
+                await fetch(`${API_URL}/subscriptions/${id}`, { method: 'DELETE' });
+                init();
+            }
+        }
+
+        function openSubModal(id) {
+            selectedProduct = products.find(p => p.id === id);
+            document.getElementById('sub-modal-title').textContent = `Subscribe: ${selectedProduct.name}`;
+            document.getElementById('sub-modal').style.display = 'flex';
+        }
+
+        async function confirmSubscription() {
+            const day = document.getElementById('s-day').value;
+            const qty = document.getElementById('s-qty').value;
+            try {
+                await fetch(`${API_URL}/subscriptions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customerId: currentUser.id, farmerId: selectedProduct.farmerId,
+                        productId: selectedProduct.id, productName: selectedProduct.name,
+                        day, quantity: qty
+                    })
+                });
+                alert("Subscription requested!");
+                document.getElementById('sub-modal').style.display = 'none';
+                init();
+            } catch (e) { alert("Error."); }
+        }
+
+        // CALENDAR
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            days.forEach(d => grid.innerHTML += `<div style="text-align:center; font-weight:bold; font-size:12px; color:var(--text-muted);">${d}</div>`);
+
+            const now = new Date();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+
+            for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateKey = `${now.getFullYear()}-${now.getMonth() + 1}-${i}`;
+                const hasNote = calendarNotes[dateKey] ? '<div style="width:6px; height:6px; background:var(--primary); border-radius:50%; margin: 2px auto 0;"></div>' : '';
+                grid.innerHTML += `
+                    <div onclick="openCalModal('${dateKey}')" style="aspect-ratio:1; background:var(--card-bg); border:1px solid var(--border); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+                        ${i}
+                        ${hasNote}
+                    </div>
+                `;
+            }
+
+            const notesList = document.getElementById('calendar-notes-list');
+            if (notesList) {
+                notesList.innerHTML = '<h3 style="margin-bottom:10px;">Saved Notes</h3>';
+                let any = false;
+                Object.keys(calendarNotes).forEach(k => {
+                    any = true;
+                    notesList.innerHTML += `<div style="background:white; padding:10px; border-radius:8px; border:1px solid var(--border); margin-bottom:5px;"><b>${k}:</b> ${calendarNotes[k]}</div>`;
+                });
+                if (!any) notesList.innerHTML += '<p style="color:var(--text-muted);">No notes yet.</p>';
+            }
+        }
+
+        function openCalModal(date) {
+            const note = prompt("Enter note for " + date, calendarNotes[date] || '');
+            if (note !== null) {
+                saveCalNote(date, note);
+            }
+        }
+
+        async function saveCalNote(date, note) {
+            try {
+                await fetch(`${API_URL}/calendar_notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ farmerId: currentUser.id, dateKey: date, note })
+                });
+                init();
+            } catch (e) { }
+        }
+
+        // MAP — Professional Leaflet implementation with farmer pins
+        let _mapFarmerData = [];
+
+        function openMapModal() {
+            document.getElementById('map-modal').style.display = 'flex';
+            if (!map) {
+                // Leaflet CSS & JS are already loaded via farmer-dashboard (if shared)
+                // or loaded here on-demand:
+                if (typeof L === 'undefined') {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                    document.head.appendChild(link);
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                    script.onload = () => setTimeout(initCustomerMap, 100);
+                    document.head.appendChild(script);
+                } else {
+                    setTimeout(initCustomerMap, 100);
+                }
+            } else {
+                setTimeout(() => { map.invalidateSize(); }, 300);
+            }
+        }
+
+        function initCustomerMap() {
+            const mapEl = document.getElementById('map');
+            if (!mapEl || map) return;
+            map = L.map('map').setView([17.3850, 78.4867], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+            renderFarmerMarkers();
+        }
+
+        async function renderFarmerMarkers() {
+            try {
+                const res = await fetch(`${API_URL}/users`);
+                const users = await res.json();
+                const farmers = users.filter(u => u.role === 'farmer' && u.lat && u.lng);
+                _mapFarmerData = farmers;
+
+                if (!farmers.length) {
+                    map.setView([17.3850, 78.4867], 6);
+                    return;
+                }
+
+                const bounds = [];
+
+                farmers.forEach(f => {
+                    const lat = parseFloat(f.lat), lng = parseFloat(f.lng);
+                    if (isNaN(lat) || isNaN(lng)) return;
+                    bounds.push([lat, lng]);
+
+                    // Count products for this farmer from loaded products array
+                    const farmerProds = (products || []).filter(p => p.farmerId == f.id);
+                    const prodCount = farmerProds.length;
+
+                    // Custom green farm pin
+                    const pinIcon = L.divIcon({
+                        className: '',
+                        html: `<div style="
+                            background: linear-gradient(135deg,#059669,#047857);
+                            color:#fff; border-radius: 50% 50% 50% 0;
+                            width:40px; height:40px;
+                            display:flex; align-items:center; justify-content:center;
+                            font-size:18px; transform:rotate(-45deg);
+                            box-shadow:0 4px 14px rgba(5,150,105,0.45);
+                            border:3px solid #fff;">
+                            <span style="transform:rotate(45deg)">🌾</span>
+                        </div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 40],
+                        popupAnchor: [0, -42]
+                    });
+
+                    const marker = L.marker([lat, lng], { icon: pinIcon }).addTo(map);
+                    marker.bindPopup(`
+                        <div style="min-width:200px;font-family:'Inter',sans-serif;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <div style="width:36px;height:36px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;flex-shrink:0;">
+                                    ${(f.name || 'F')[0].toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight:800;font-size:15px;color:#111;">${f.name}</div>
+                                    <div style="font-size:11px;color:#6b7280;">👨‍🌾 Farmer</div>
+                                </div>
+                            </div>
+                            ${f.location ? `<div style="font-size:12px;color:#374151;margin-bottom:6px;"><i style="color:#059669;">📍</i> ${f.location}</div>` : ''}
+                            <div style="background:#f0fdf4;border-radius:8px;padding:8px;margin-bottom:10px;font-size:12px;color:#065f46;font-weight:700;">
+                                🌿 ${prodCount} product${prodCount !== 1 ? 's' : ''} available
+                            </div>
+                            ${f.mobile ? `<div style="font-size:11px;color:#6b7280;margin-bottom:8px;">📞 ${f.mobile}</div>` : ''}
+                            <button onclick="closeMapModal(); setTimeout(()=>{ const el=document.getElementById('product-search'); if(el){el.value='${f.name}'; filterProducts();} switchSection('market'); }, 300);"
+                                style="width:100%;padding:9px;border-radius:10px;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;font-weight:800;cursor:pointer;font-size:13px;">
+                                🛒 View Products
+                            </button>
+                        </div>
+                    `, { maxWidth: 240 });
+                });
+
+                // Fit map to show all farmers
+                if (bounds.length) map.fitBounds(bounds, { padding: [40, 40] });
+
+            } catch (e) {
+                console.error('Map Marker Error:', e);
+            }
+        }
+
+        function closeMapModal() { document.getElementById('map-modal').style.display = 'none'; }
+
+        // PROFILE
+        function loadProfile() {
+            document.getElementById('cust-profile-name-input').value = currentUser.name || '';
+            document.getElementById('cust-profile-mobile').value = currentUser.mobile || '';
+            document.getElementById('cust-profile-location').value = currentUser.location || '';
+            document.getElementById('profile-wallet').textContent = (currentUser.wallet || 0).toFixed(2);
+            document.getElementById('cust-profile-name').textContent = currentUser.name;
+
+            const pendingFee = parseFloat(currentUser.pending_platform_fee || 0);
+            document.getElementById('profile-pending-fee').textContent = pendingFee.toFixed(2);
+            const badge = document.getElementById('fee-status-badge');
+            if (pendingFee > 800) {
+                badge.textContent = 'WARNING';
+                badge.style.background = '#fef3c7';
+                badge.style.color = '#b45309';
+            } else if (pendingFee > 1000) {
+                badge.textContent = 'LOCKED';
+                badge.style.background = '#fee2e2';
+                badge.style.color = '#ef4444';
+            }
+
+            if (currentUser.profilePic) {
+                document.getElementById('cust-avatar-letter').style.display = 'none';
+                document.getElementById('cust-avatar-img').src = currentUser.profilePic;
+                document.getElementById('cust-avatar-img').style.display = 'block';
+            }
+        }
+
+        async function addFunds() {
+            const amount = prompt("Enter amount (₹):");
+            if (!amount || isNaN(amount)) return;
+            try {
+                const res = await fetch(`${API_URL}/users/add-wallet`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, amount: parseFloat(amount) })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser.wallet = data.wallet;
+                    sessionStorage.setItem('current_user', JSON.stringify(currentUser));
+
+                    // Synchronized UI updates
+                    if (document.getElementById('profile-wallet')) document.getElementById('profile-wallet').textContent = currentUser.wallet.toFixed(2);
+                    if (document.getElementById('header-wallet')) document.getElementById('header-wallet').textContent = currentUser.wallet.toFixed(2);
+
+                    if (window.Android) window.Android.showToast("Funds added!");
+                    else alert("Funds added successfully!");
+                }
+            } catch (e) { alert("Failed to add funds."); }
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById('cust-profile-name-input').value;
+            const mobile = document.getElementById('cust-profile-mobile').value;
+            const location = document.getElementById('cust-profile-location').value;
+            try {
+                const res = await fetch(`${API_URL}/users/${currentUser.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, mobile, location })
+                });
+                if (res.ok) {
+                    currentUser.name = name;
+                    currentUser.mobile = mobile;
+                    currentUser.location = location;
+                    sessionStorage.setItem('current_user', JSON.stringify(currentUser));
+                    init();
+                    alert("Profile saved successfully!");
+                }
+            } catch (e) { alert("Failed to save profile."); }
+        }
+
+        async function renderPosts() {
+            try {
+                const res = await fetch(`${API_URL}/community`);
+                const posts = await res.json();
+                const container = document.getElementById('community-posts');
+                container.innerHTML = '';
+                posts.forEach((p, index) => {
+                    const date = new Date(p.timestamp).toLocaleDateString();
+                    const initial = (p.customerName || 'A').charAt(0);
+                    container.innerHTML += `
+                        <div class="card animate__animated animate__fadeInUp" style="padding: 20px; border-radius: 18px; margin-bottom: 15px; border: 1px solid var(--border); background: var(--card-bg); animation-delay: ${index * 0.05}s">
+                            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
+                                <div style="width: 40px; height: 40px; background: var(--primary); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800;">${initial}</div>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 14px;">${p.customerName || 'Anonymous'}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">${date}</div>
+                                </div>
+                            </div>
+                            <p style="margin: 0 0 15px 0; font-size: 14px; line-height: 1.6; color: var(--text);">${p.message}</p>
+                            <div style="display: flex; gap: 15px; border-top: 1px solid var(--border); padding-top: 10px;">
+                                <button onclick="likePost(${p.id})" style="background: transparent; border: none; color: var(--primary); font-size: 12px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 5px;">
+                                    <i class="far fa-heart"></i> ${p.likes || 0} Likes
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function postToCommunity() {
+            const msg = document.getElementById('community-input').value;
+            if (!msg) return;
+            try {
+                const res = await fetch(`${API_URL}/community`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customerId: currentUser.id, customerName: currentUser.name, message: msg })
+                });
+                if (res.ok) {
+                    document.getElementById('community-input').value = '';
+                    renderPosts();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function likePost(id) {
+            try {
+                await fetch(`${API_URL}/community/${id}/like`, { method: 'POST' });
+                renderPosts();
+            } catch (e) { console.error(e); }
+        }
+
+        // WISHLIST
+        const WISHLIST_KEY = () => `kisaan_wishlist_${currentUser ? currentUser.id : 'guest'}`;
+
+        function getWishlist() {
+            return JSON.parse(localStorage.getItem(WISHLIST_KEY()) || '[]');
+        }
+
+        function toggleWishlist(productId) {
+            const list = getWishlist();
+            const idx = list.indexOf(productId);
+            if (idx === -1) {
+                list.push(productId);
+                showWishlistToast('❤️ Added to Wishlist!');
+            } else {
+                list.splice(idx, 1);
+                showWishlistToast('💔 Removed from Wishlist');
+            }
+            localStorage.setItem(WISHLIST_KEY(), JSON.stringify(list));
+            // Update heart icons in product grid
+            updateWishlistHearts();
+            if (document.getElementById('wishlist-section') && document.getElementById('wishlist-section').classList.contains('active')) {
+                renderWishlist();
+            }
+        }
+
+        function updateWishlistHearts() {
+            const list = getWishlist();
+            document.querySelectorAll('[data-wish-id]').forEach(btn => {
+                const id = parseInt(btn.getAttribute('data-wish-id'));
+                btn.innerHTML = list.includes(id)
+                    ? '<i class="fas fa-heart" style="color:#ef4444;"></i>'
+                    : '<i class="far fa-heart" style="color:#ef4444;"></i>';
+            });
+        }
+
+        function showWishlistToast(msg) {
+            let toast = document.getElementById('wish-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'wish-toast';
+                toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:12px 22px;border-radius:50px;font-weight:800;font-size:14px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            clearTimeout(window._wishToastTimer);
+            window._wishToastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+        }
+
+        function renderWishlist() {
+            const container = document.getElementById('wishlist-grid');
+            if (!container) return;
+            const list = getWishlist();
+            if (!list.length) {
+                container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted);">
+                    <div style="font-size:64px;margin-bottom:16px;">💔</div>
+                    <h3 style="margin:0 0 8px;font-size:20px;font-weight:800;">Your wishlist is empty</h3>
+                    <p style="margin:0 0 20px;font-size:14px;">Tap the ❤️ on any product to save it here for later.</p>
+                    <button onclick="switchSection('shop')" style="padding:12px 28px;border-radius:12px;background:linear-gradient(135deg,#f97316,#ef4444);color:white;border:none;font-weight:800;cursor:pointer;font-size:14px;"><i class="fas fa-shopping-basket"></i> Browse Products</button>
+                </div>`;
+                return;
+            }
+            const wishProds = (products || []).filter(p => list.includes(p.id));
+            if (!wishProds.length) {
+                container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
+                    <p>Your saved products are no longer available. <a href="#" onclick="switchSection('shop');return false;" style="color:var(--primary);font-weight:700;">Browse new products</a></p>
+                </div>`;
+                return;
+            }
+            container.innerHTML = wishProds.map(p => {
+                const img = p.images && p.images.length ? p.images[0] : 'https://images.unsplash.com/photo-1518977676601-b53f02bad67b?auto=format&fit=crop&w=400';
+                return `<div style="background:var(--card-bg);border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="position:relative;">
+                        <img src="${img}" style="width:100%;height:180px;object-fit:cover;">
+                        <button data-wish-id="${p.id}" onclick="toggleWishlist(${p.id})" style="position:absolute;top:10px;right:10px;background:white;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                            <i class="fas fa-heart" style="color:#ef4444;"></i>
+                        </button>
+                        <div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.65);color:white;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;">₹${p.price}/kg</div>
+                    </div>
+                    <div style="padding:15px;">
+                        <div style="font-weight:800;font-size:16px;margin-bottom:4px;">${p.name}</div>
+                        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"><i class="fas fa-user-circle"></i> ${p.farmerName || 'Farmer'} &nbsp;•&nbsp; <i class="fas fa-weight-hanging"></i> ${p.quantity} kg left</div>
+                        <div style="display:flex;gap:8px;">
+                            <button onclick="openProductDetail(${p.id})" style="flex:1;padding:10px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border);color:var(--text);font-weight:700;cursor:pointer;font-size:13px;">View</button>
+                            <button onclick="openQuoteModal(${p.id})" style="flex:1;padding:10px;border-radius:10px;background:linear-gradient(135deg,#f97316,#ef4444);color:white;border:none;font-weight:800;cursor:pointer;font-size:13px;"><i class="fas fa-shopping-cart"></i> Order</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // OPEN PAY MODAL — fetches farmer UPI/bank details for display
+        async function openPayForQuote(quoteId) {
+            const quote = quotes.find(q => q.id == quoteId);
+            if (!quote) return;
+            // Fetch farmer payment details
+            let farmerPayInfo = { upi: null, bank: null };
+            try {
+                const r = await fetch(`${API_URL}/farmer-payment-info/${quote.farmerId}`);
+                if (r.ok) farmerPayInfo = await r.json();
+            } catch (e) { }
+            // Show the modal with farmer info
+            showFlipkartPayModal(quote, farmerPayInfo);
+        }
+
+        // FLIPKART-STYLE ORDER PAYMENT MODAL
+        function showFlipkartPayModal(quote, farmerPayInfo) {
+            const total = (parseFloat(quote.offerPrice || 0) * parseFloat(quote.quantity || 0)).toFixed(2);
+            document.getElementById('fp-amount').textContent = total;
+            document.getElementById('fp-product-name').textContent = quote.productName;
+            document.getElementById('fp-qty').textContent = quote.quantity + ' kg';
+            document.getElementById('fp-rate').textContent = '₹' + quote.offerPrice + '/kg';
+            document.getElementById('fp-farmer').textContent = quote.farmerName || 'Farmer';
+            document.getElementById('fp-quote-id').value = quote.id;
+
+            // Store farmer UPI for deep links
+            const fpi = farmerPayInfo || {};
+            window._currentFarmerUpi = (fpi.upi && fpi.upi.upiId) ? fpi.upi.upiId : '';
+
+            // Show farmer payment details panel
+            const farmerInfoEl = document.getElementById('fp-farmer-info');
+            if (farmerInfoEl) {
+                let html = '';
+                if (fpi.upi && fpi.upi.upiId) {
+                    html += `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <div><div style="font-size:10px;font-weight:700;color:#059669;text-transform:uppercase;"><i class="fas fa-mobile-alt"></i> Farmer UPI</div><div style="font-size:15px;font-weight:900;color:#065f46;">${fpi.upi.upiId}</div></div>
+                        <button onclick="navigator.clipboard.writeText('${fpi.upi.upiId}').then(()=>this.textContent='✅ Copied!')" style="background:#d1fae5;border:none;color:#059669;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;">Copy</button>
+                    </div>`;
+                }
+                if (fpi.bank && fpi.bank.accountNumber) {
+                    html += `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;font-size:12px;color:#1e3a8a;">
+                        <b>${fpi.bank.holderName || ''}</b> · ${fpi.bank.bankName || ''}<br>
+                        <span style="letter-spacing:1px;font-weight:800;">${fpi.bank.accountNumber}</span> · IFSC: ${fpi.bank.ifsc || '—'}
+                    </div>`;
+                }
+                if (!html) html = `<div style="font-size:12px;color:#9ca3af;text-align:center;padding:6px;">Farmer payment details not set. Contact farmer directly.</div>`;
+                farmerInfoEl.innerHTML = html;
+            }
+
+            document.getElementById('order-pay-modal').style.display = 'flex';
+            // Auto-show UPI action panel
+            fpSelectMethod('upi', document.getElementById('fp-upi'));
+        }
+
+        function showConfirmBtn() {
+            const btn = document.getElementById('fp-confirm-btn');
+            if (btn) {
+                btn.style.display = 'block';
+                btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function fpSelectMethod(method, el) {
+            // Highlight selected tile, hide confirm button
+            ['fp-upi', 'fp-card', 'fp-netbanking', 'fp-cod'].forEach(id => {
+                const t = document.getElementById(id);
+                if (t) { t.style.borderColor = 'var(--border)'; t.style.background = ''; }
+            });
+            if (el) { el.style.borderColor = '#f97316'; el.style.background = 'rgba(249,115,22,0.06)'; }
+            document.getElementById('fp-selected-method').value = method;
+
+            // Hide confirm button — only show after payment action
+            const btn = document.getElementById('fp-confirm-btn');
+            if (btn) btn.style.display = 'none';
+
+            const amount = document.getElementById('fp-amount').textContent;
+            const farmerUpi = window._currentFarmerUpi || '';
+            const farmerName = encodeURIComponent(document.getElementById('fp-farmer').textContent || 'Farmer');
+            const note = encodeURIComponent('KisaanConnect Order Payment');
+            const panel = document.getElementById('fp-action-panel');
+
+            if (method === 'upi') {
+                const upiLink = farmerUpi
+                    ? `upi://pay?pa=${encodeURIComponent(farmerUpi)}&pn=${farmerName}&am=${amount}&cu=INR&tn=${note}`
+                    : null;
+                // onclick on each app calls showConfirmBtn()
+                panel.innerHTML = `
+                    <div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:16px;padding:16px;">
+                        <div style="font-size:12px;font-weight:800;color:#7c3aed;margin-bottom:10px;"><i class="fas fa-mobile-alt"></i> Pay via UPI App</div>
+                        ${farmerUpi
+                        ? `<div style="background:white;border-radius:10px;padding:10px 14px;margin-bottom:12px;border:1px solid #e9d5ff;display:flex;justify-content:space-between;align-items:center;">
+                                <div><span style="color:#6b7280;font-size:11px;">Send to UPI:</span><br><b style="font-size:16px;color:#7c3aed;">${farmerUpi}</b></div>
+                                <button onclick="navigator.clipboard.writeText('${farmerUpi}').then(()=>this.textContent='✅')" style="background:#ede9fe;border:none;color:#7c3aed;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;">📋 Copy</button>
+                               </div>`
+                        : `<div style="background:#fff3cd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#92400e;"><i class="fas fa-exclamation-triangle"></i> Farmer UPI not set — use Net Banking or contact farmer directly.</div>`}
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <a href="${upiLink || '#'}" target="_blank" onclick="showConfirmBtn()" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:white;border:1.5px solid #4ade80;border-radius:12px;text-decoration:none;color:#166534;font-weight:700;font-size:13px;${!farmerUpi ? 'opacity:0.4;pointer-events:none;' : ''}">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Pay_Logo.svg/512px-Google_Pay_Logo.svg.png" onerror="this.style.display='none'" style="width:22px;height:22px;object-fit:contain;"> GPay
+                            </a>
+                            <a href="${upiLink ? upiLink.replace('upi://', 'phonepe://') : '#'}" target="_blank" onclick="showConfirmBtn()" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:white;border:1.5px solid #a78bfa;border-radius:12px;text-decoration:none;color:#5b21b6;font-weight:700;font-size:13px;${!farmerUpi ? 'opacity:0.4;pointer-events:none;' : ''}">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.png" onerror="this.style.display='none'" style="width:22px;height:22px;object-fit:contain;"> PhonePe
+                            </a>
+                            <a href="${upiLink ? upiLink.replace('upi://', 'paytmmp://') : '#'}" target="_blank" onclick="showConfirmBtn()" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:white;border:1.5px solid #60a5fa;border-radius:12px;text-decoration:none;color:#1e40af;font-weight:700;font-size:13px;${!farmerUpi ? 'opacity:0.4;pointer-events:none;' : ''}">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/Paytm_logo.png" onerror="this.style.display='none'" style="width:22px;height:22px;object-fit:contain;"> Paytm
+                            </a>
+                            <a href="${upiLink || '#'}" target="_blank" onclick="showConfirmBtn()" style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:white;border:1.5px solid #f87171;border-radius:12px;text-decoration:none;color:#991b1b;font-weight:700;font-size:13px;${!farmerUpi ? 'opacity:0.4;pointer-events:none;' : ''}">
+                                <span style="font-size:18px;">🇮🇳</span> BHIM
+                            </a>
+                        </div>
+                        <div style="margin-top:12px;padding:10px;background:rgba(124,58,237,0.06);border-radius:10px;font-size:11px;color:#5b21b6;text-align:center;"><i class="fas fa-info-circle"></i> Tap an app to open it and complete payment. The <b>"I've Paid"</b> button will appear here.</div>
+                    </div>`;
+            } else if (method === 'netbanking') {
+                const banks = [
+                    { name: 'SBI', color: '#1a3a8f', url: 'https://www.onlinesbi.sbi/', logo: '🏛️' },
+                    { name: 'HDFC', color: '#004c97', url: 'https://netbanking.hdfcbank.com/', logo: '🏦' },
+                    { name: 'ICICI', color: '#b02a30', url: 'https://www.icicibank.com/online/banking', logo: '🔴' },
+                    { name: 'Axis', color: '#800000', url: 'https://retail.axisbank.co.in/', logo: '🏧' },
+                    { name: 'Kotak', color: '#c84b11', url: 'https://netbanking.kotak.com/', logo: '🟠' },
+                    { name: 'Punjab NB', color: '#1e6b3c', url: 'https://www.netpnb.com/', logo: '🟢' },
+                    { name: 'Bank of Baroda', color: '#f4a014', url: 'https://www.bobibanking.com/', logo: '🟡' },
+                    { name: 'Union Bank', color: '#003d79', url: 'https://www.unionbankonline.co.in/', logo: '🔵' },
+                ];
+                panel.innerHTML = `
+                    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:16px;padding:14px;">
+                        <div style="font-size:12px;font-weight:800;color:#1d4ed8;margin-bottom:10px;"><i class="fas fa-university"></i> Choose Your Bank</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            ${banks.map(b => `<a href="${b.url}" target="_blank" rel="noopener" onclick="showConfirmBtn()" style="display:flex;align-items:center;gap:8px;padding:11px 12px;background:white;border:1.5px solid #bfdbfe;border-radius:12px;text-decoration:none;color:${b.color};font-weight:700;font-size:13px;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='white'">
+                                <span style="font-size:18px;">${b.logo}</span>${b.name}
+                            </a>`).join('')}
+                        </div>
+                        <div style="margin-top:10px;padding:10px;background:rgba(59,130,246,0.07);border-radius:10px;font-size:11px;color:#1e3a8a;text-align:center;"><i class="fas fa-info-circle"></i> Open your bank → log in → pay ₹${amount}. The <b>"I've Paid"</b> button will appear.</div>
+                    </div>`;
+            } else if (method === 'card') {
+                panel.innerHTML = `
+                    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:16px;padding:14px;">
+                        <div style="font-size:12px;font-weight:800;color:#166534;margin-bottom:10px;"><i class="fas fa-credit-card"></i> Card Details</div>
+                        <input id="fp-card-no" type="text" maxlength="19" placeholder="1234 5678 9012 3456"
+                            oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(.{4})/g,'$1 ').trim(); if(this.value.replace(/\s/g,'').length>=16) showConfirmBtn();"
+                            style="width:100%;padding:12px;border:1.5px solid #bbf7d0;border-radius:10px;font-size:15px;letter-spacing:2px;box-sizing:border-box;margin-bottom:8px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                            <input id="fp-card-exp" type="text" maxlength="5" placeholder="MM/YY" oninput="this.value=this.value.replace(/[^0-9\/]/g,'').replace(/^([0-9]{2})([0-9])/,'$1/$2')" style="padding:12px;border:1.5px solid #bbf7d0;border-radius:10px;font-size:14px;box-sizing:border-box;">
+                            <input id="fp-card-cvv" type="password" maxlength="4" placeholder="CVV" style="padding:12px;border:1.5px solid #bbf7d0;border-radius:10px;font-size:14px;box-sizing:border-box;">
+                        </div>
+                        <div style="margin-top:10px;font-size:11px;color:#166534;text-align:center;"><i class="fas fa-lock"></i> Enter your card details above to enable payment</div>
+                    </div>`;
+            } else if (method === 'cash') {
+                panel.innerHTML = `
+                    <div style="background:#f9fafb;border:1.5px dashed #d1d5db;border-radius:16px;padding:16px;text-align:center;">
+                        <div style="font-size:32px;margin-bottom:6px;">💵</div>
+                        <div style="font-weight:800;color:#374151;margin-bottom:4px;">Cash on Delivery</div>
+                        <div style="font-size:12px;color:#6b7280;">You'll pay ₹${amount} in cash when you receive the produce from the farmer.</div>
+                    </div>`;
+                // Cash — show confirm immediately
+                showConfirmBtn();
+            }
+        }
+
+        async function submitOrderPayment() {
+            const quoteId = document.getElementById('fp-quote-id').value;
+            const method = document.getElementById('fp-selected-method').value;
+            const amount = document.getElementById('fp-amount').textContent;
+            const productName = document.getElementById('fp-product-name').textContent;
+            const quote = quotes.find(q => q.id == quoteId) || {};
+            const orderTotal = parseFloat(amount);
+            const platformFee = (orderTotal * 0.03).toFixed(2);
+
+            const payBtn = document.getElementById('fp-confirm-btn');
+            if (payBtn) { payBtn.disabled = true; payBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...'; }
+
+            try {
+                // 1. Record the payment
+                await fetch(`${API_URL}/payments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUser.id, userRole: 'customer', type: 'debit',
+                        method, amount: orderTotal,
+                        description: `Payment for ${productName} (Quote #${quoteId})`,
+                        reference: `QT-${quoteId}`
+                    })
+                });
+
+                // 2. Platform fee is automatically accrued on the backend.
+
+                // 3. Mark quote as paid
+                await fetch(`${API_URL}/quotes/${quoteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'yes', paid: 1, paymentMethod: method })
+                });
+
+                // 4. Send receipt
+                const paymentDate = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' });
+                const receiptRes = await fetch(`${API_URL}/send-receipt`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customerEmail: currentUser.email,
+                        customerName: currentUser.name,
+                        farmerEmail: quote.farmerEmail || '',
+                        farmerName: quote.farmerName || 'Farmer',
+                        productName, quantity: quote.quantity,
+                        amount, method, quoteId, paymentDate
+                    })
+                });
+                const receiptData = await receiptRes.json();
+
+                document.getElementById('order-pay-modal').style.display = 'none';
+
+                // 5. Update local quote data & refresh orders
+                const q = quotes.find(q => q.id == quoteId);
+                if (q) { q.paid = true; q.paymentMethod = method; }
+                renderQuotes();
+
+                // 6. Show receipt popup — includes platform fee info
+                showReceiptPopup(receiptData.receiptHtml || null, amount, method, platformFee);
+
+            } catch (e) {
+                console.error(e);
+                alert('❌ Payment failed. Please try again.');
+            } finally {
+                if (payBtn) { payBtn.disabled = false; payBtn.innerHTML = '<i class="fas fa-lock"></i> I\'ve Paid — Confirm Order'; }
+            }
+        }
+
+        function showReceiptPopup(html, amount, method, platformFee) {
+            const popup = document.createElement('div');
+            popup.id = 'receipt-popup-overlay';
+            popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+            const receiptId = 'RC-' + Date.now().toString(36).toUpperCase();
+            const feeHtml = platformFee ? `<div style="margin-top:8px;background:rgba(255,255,255,0.15);border-radius:10px;padding:8px 14px;font-size:12px;opacity:0.9;">⚠️ Platform Fee (3%): <b>₹${platformFee}</b> deducted from wallet</div>` : '';
+            popup.innerHTML = `
+                <div style="width:94%;max-width:520px;background:var(--card-bg);border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.5);max-height:92vh;display:flex;flex-direction:column;">
+                    <div style="background:linear-gradient(135deg,#059669,#10b981);padding:24px;text-align:center;color:white;flex-shrink:0;">
+                        <div style="font-size:52px;line-height:1;">✅</div>
+                        <h2 style="margin:10px 0 4px;font-size:22px;font-weight:900;">Payment Successful!</h2>
+                        <div style="font-size:32px;font-weight:900;letter-spacing:-1px;">₹${amount}</div>
+                        <div style="font-size:13px;opacity:0.85;margin-top:4px;">via ${method.toUpperCase()} &nbsp;·&nbsp; ${receiptId}</div>
+                        ${feeHtml}
+                    </div>
+                    <div style="padding:20px;overflow-y:auto;flex:1;">
+                        ${html ? `
+                            <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:12px;"><i class="fas fa-file-alt"></i> Your payment receipt</div>
+                            <iframe id="receipt-iframe" srcdoc="${html.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" style="width:100%;height:300px;border:none;border-radius:12px;background:white;"></iframe>
+                        ` : '<p style="text-align:center;padding:20px;color:var(--text-muted);"><i class="fas fa-check-circle" style="font-size:32px;color:#059669;display:block;margin-bottom:8px;"></i>Order confirmed! The farmer will contact you soon.</p>'}
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;">
+                            <button onclick="downloadReceiptPDF()" style="padding:14px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;cursor:pointer;font-weight:800;font-size:14px;">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </button>
+                            <button onclick="closeReceiptAndGoToPayments()" style="padding:14px;border-radius:12px;background:linear-gradient(135deg,#059669,#10b981);color:white;border:none;cursor:pointer;font-weight:800;font-size:14px;">
+                                <i class="fas fa-receipt"></i> View History
+                            </button>
+                        </div>
+                        <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-muted);">Tap <b>View History</b> to see your payment record</div>
+                    </div>
+                </div>`;
+            document.body.appendChild(popup);
+            window._lastReceiptHtml = html;
+        }
+
+        function closeReceiptAndGoToPayments() {
+            const overlay = document.getElementById('receipt-popup-overlay');
+            if (overlay) overlay.remove();
+            // Navigate to Payments section
+            switchSection('payments');
+            // Update nav tab highlight
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const payTab = document.querySelector('.nav-btn[onclick*="payments"]');
+            if (payTab) payTab.classList.add('active');
+            // Load fresh payments
+            loadCustomerPayments();
+            // Scroll to top of section
+            const ps = document.getElementById('payments-section');
+            if (ps) ps.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function downloadReceiptPDF() {
+            const html = window._lastReceiptHtml;
+            if (!html) { alert('No receipt available to download.'); return; }
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            setTimeout(() => {
+                win.print(); // triggers Save as PDF dialog
+            }, 600);
+        }
+
+        async function loadCustomerPayments() {
+            const container = document.getElementById('customer-payments-list');
+            if (!container) return;
+            try {
+                const res = await fetch(`${API_URL}/payments?userId=${currentUser.id}`);
+                const txns = await res.json();
+                const debits = txns.filter(t => t.type === 'debit');
+                const totalSpent = debits.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+                const spentEl = document.getElementById('total-spent-disp');
+                const cntEl = document.getElementById('txn-count');
+                if (spentEl) spentEl.textContent = totalSpent.toFixed(2);
+                if (cntEl) cntEl.textContent = debits.length;
+
+                if (!txns.length) {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-receipt" style="font-size:36px;opacity:0.3;display:block;margin-bottom:12px;"></i><p>No purchases yet. Start buying fresh produce!</p></div>';
+                    return;
+                }
+
+                const methodIcons = { upi: 'fa-mobile-alt', card: 'fa-credit-card', netbanking: 'fa-university', wallet: 'fa-wallet', cash: 'fa-money-bill-wave', bank_transfer: 'fa-exchange-alt' };
+                container.innerHTML = txns.map(t => {
+                    const isDebit = t.type === 'debit';
+                    const iconClass = methodIcons[t.method] || 'fa-money-bill';
+                    const dateStr = new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                    const timeStr = new Date(t.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+                    return `<div style="background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+                        <div style="display:flex;gap:14px;align-items:center;">
+                            <div style="width:46px;height:46px;background:${isDebit ? '#fee2e2' : '#d1fae5'};color:${isDebit ? '#ef4444' : '#059669'};border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;font-size:14px;color:var(--text);">${t.description || 'Payment'}</div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${dateStr} ${timeStr} · ${t.method.toUpperCase()}</div>
+                                ${t.reference ? `<div style="font-size:10px;color:var(--text-muted);">Ref: ${t.reference}</div>` : ''}
+                            </div>
+                        </div>
+                        <div style="font-weight:900;font-size:16px;color:${isDebit ? '#ef4444' : '#059669'};white-space:nowrap;">${isDebit ? '-' : '+'}₹${parseFloat(t.amount).toFixed(2)}</div>
+                    </div>`;
+                }).join('');
+            } catch (e) { container.innerHTML = '<div style="color:#ef4444;padding:20px;text-align:center;">Error loading transactions.</div>'; }
+        }
+        function changeLang(val) {
+            currentLang = val;
+            localStorage.setItem('kisaan_lang', val);
+            updateUIStrings();
+        }
+
+        function updateUIStrings() {
+            const t = translations[currentLang] || translations.en;
+            // Additional translation logic can go here
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const theme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', theme);
+            localStorage.setItem('kisaan_theme', theme);
+            document.getElementById('theme-icon').className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+
+        function handleLogout() { sessionStorage.clear(); window.location.href = 'index.html'; }
+
+        async function uploadProfilePic(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result;
+                    try {
+                        await fetch(`${API_URL}/users/update-profile`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ userId: currentUser.id, profilePic: base64 })
+                        });
+                        currentUser.profilePic = base64;
+                        sessionStorage.setItem('current_user', JSON.stringify(currentUser));
+                        loadProfile();
+                    } catch (e) { }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function checkServer() {
+            const dot = document.getElementById('connection-dot');
+            try {
+                const res = await fetch(`${API_URL}/health`);
+                if (res.ok) {
+                    if (dot) dot.style.background = '#16a34a';
+                    if (dot) dot.style.boxShadow = '0 0 10px #16a34a';
+                } else {
+                    if (dot) dot.style.background = '#ef4444';
+                    if (dot) dot.style.boxShadow = '0 0 10px #ef4444';
+                }
+            } catch (e) {
+                if (dot) dot.style.background = '#ef4444';
+                if (dot) dot.style.boxShadow = '0 0 10px #ef4444';
+            }
+        }
+
+        function initSocket() {
+            if (typeof io === 'undefined') return;
+            const socket = io(`http://${host}:3000`);
+            // Custom listeners can go here
+        }
+        setInterval(checkServer, 10000);
+
+        // CUSTOMER PAYMENT FUNCTIONS
+        let _custPmType = 'debit';
+        let _rzpSelectedBank = '';
+        let _rzpSelectedWallet = '';
+
+        function showCustPaymentModal(type, method) {
+            _custPmType = type;
+            const modal = document.getElementById('cust-payment-modal');
+            const amt = prompt('Enter amount (₹):', '');
+            if (!amt || isNaN(amt) || parseFloat(amt) <= 0) return;
+            const parsed = parseFloat(amt).toFixed(2);
+            document.getElementById('cust-pm-amount').value = parsed;
+            document.getElementById('rzp-amount-disp').textContent = parsed;
+            document.querySelectorAll('.rzp-pay-btn-amt').forEach(el => el.textContent = parsed);
+            rzpTab(method || 'upi');
+            modal.style.display = 'flex';
+        }
+
+        function rzpTab(tab) {
+            ['upi', 'card', 'netbanking', 'wallet', 'cash'].forEach(t => {
+                const panel = document.getElementById('rzp-panel-' + t);
+                const btn = document.getElementById('tab-' + t);
+                if (panel) panel.style.display = t === tab ? 'block' : 'none';
+                if (btn) {
+                    btn.style.color = t === tab ? '#1a3a8f' : 'var(--text-muted)';
+                    btn.style.borderBottom = t === tab ? '3px solid #1a3a8f' : '3px solid transparent';
+                }
+            });
+            document.getElementById('cust-pm-method').value = tab;
+        }
+
+        function rzpSelectApp(app) {
+            document.querySelectorAll('#rzp-panel-upi [id^="app-"]').forEach(el => {
+                el.style.background = '';
+                el.style.borderColor = '';
+            });
+            const el = document.getElementById('app-' + app);
+            if (el) { el.style.background = 'rgba(26,58,143,0.07)'; el.style.borderColor = '#1a3a8f'; }
+        }
+
+        function rzpSelectBank(bank) {
+            _rzpSelectedBank = bank;
+            document.querySelectorAll('.bank-opt').forEach(el => {
+                el.style.background = '';
+                el.style.borderColor = 'var(--border)';
+            });
+            event.currentTarget.style.background = 'rgba(26,58,143,0.07)';
+            event.currentTarget.style.borderColor = '#1a3a8f';
+        }
+
+        function rzpSelectWallet(wallet) { _rzpSelectedWallet = wallet; }
+
+        async function submitCustPaymentCard() {
+            const num = document.getElementById('card-number').value.replace(/\s/g, '');
+            if (num.length < 16) { alert('Enter a valid 16-digit card number.'); return; }
+            document.getElementById('cust-pm-method').value = 'card';
+            document.getElementById('cust-pm-desc').value = 'Card Payment';
+            await submitCustPayment();
+        }
+
+        async function submitCustPaymentNB() {
+            const bank = _rzpSelectedBank || document.getElementById('nb-bank-select').value;
+            if (!bank) { alert('Please select a bank.'); return; }
+            document.getElementById('cust-pm-method').value = 'netbanking';
+            document.getElementById('cust-pm-desc').value = `Net Banking - ${bank}`;
+            await submitCustPayment();
+        }
+
+        async function submitCustPaymentWallet() {
+            if (!_rzpSelectedWallet) { alert('Please select a wallet.'); return; }
+            document.getElementById('cust-pm-method').value = 'wallet';
+            document.getElementById('cust-pm-desc').value = `Wallet - ${_rzpSelectedWallet}`;
+            await submitCustPayment();
+        }
+
+        async function submitCustPaymentCOD() {
+            document.getElementById('cust-pm-method').value = 'cash';
+            document.getElementById('cust-pm-desc').value = 'Cash on Delivery';
+            _custPmType = 'debit';
+            await submitCustPayment();
+        }
+
+        async function submitCustPayment() {
+            const amount = parseFloat(document.getElementById('cust-pm-amount').value);
+            const method = document.getElementById('cust-pm-method').value;
+            const desc = document.getElementById('cust-pm-desc').value;
+            if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
+
+            try {
+                const res = await fetch(`${API_URL}/payments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, userRole: 'customer', type: _custPmType, method, amount, description: desc })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('cust-payment-modal').style.display = 'none';
+                    const delta = _custPmType === 'credit' ? amount : -amount;
+                    currentUser.wallet = (parseFloat(currentUser.wallet || 0) + delta).toFixed(2);
+                    sessionStorage.setItem('current_user', JSON.stringify(currentUser));
+                    const wEl = document.getElementById('customer-wallet-disp');
+                    if (wEl) wEl.textContent = parseFloat(currentUser.wallet).toFixed(2);
+                    loadCustomerPayments();
+                    alert('✅ Transaction recorded!');
+                }
+            } catch (e) { console.error(e); alert('Error recording payment.'); }
+        }
+
+        async function fetchAdminPaymentDetails() {
+            try {
+                const res = await fetch(`${API_URL}/platform-fee-details`);
+                const data = await res.json();
+                document.getElementById('admin-payment-details-box').innerText = data.details;
+            } catch (e) {
+                document.getElementById('admin-payment-details-box').innerText = "Unable to load details. Please contact support.";
+            }
+        }
+
+        // ── Network: discover server then start app ──────────────────────────
+        window.onload = function() {
+            KisaanNetwork.init().then(url => {
+                API_URL = url;
+                _refreshHost();
+                init();
+            });
+            setInterval(async () => {
+                const r = await KisaanNetwork.ping(API_URL);
+                KisaanNetwork.setDot(r.ok, null);
+            }, 20000);
+        };
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,45 @@
+# ── Dependencies ──────────────────────────────────────────────────────────
+node_modules/
+
+# ── Environment / Secrets (NEVER commit these!) ───────────────────────────
+.env
+.env.local
+.env.production
+
+# ── Android Build Artifacts ───────────────────────────────────────────────
+*.apk
+*.aab
+build/
+.gradle/
+.gradle_home/
+.gradle_tmp/
+.kotlin/
+local.properties
+hs_err_pid*.log
+gradle/wrapper/dists/
+
+# ── Tunnel / Runtime Files ────────────────────────────────────────────────
+.tunnel-url
+.tunnel.lock
+
+# ── Uploads (user-generated content — use cloud storage in production) ────
+uploads/*
+!uploads/.gitkeep
+
+# ── Scratch / Temp ────────────────────────────────────────────────────────
+scratch/
+temp.css
+temp.js
+test_script_*.js
+
+# ── Editor ────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── Logs ──────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+
+# ── OS ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

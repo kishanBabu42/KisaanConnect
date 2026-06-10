@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.KisaanConnect" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#2e7d32</item>
+    </style>
+</resources>

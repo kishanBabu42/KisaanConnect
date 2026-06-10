@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "name": "kisaanconnect",
+  "buildCommand": "node build-env.js",
+  "outputDirectory": ".",
+  "routes": [
+    { "src": "/farmer",   "dest": "/farmer-dashboard.html"   },
+    { "src": "/customer", "dest": "/customer-dashboard.html" },
+    { "src": "/admin",    "dest": "/admin-dashboard.html"    },
+    { "src": "/login",    "dest": "/admin-login.html"        },
+    { "src": "/(.*)",     "dest": "/$1"                      }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS, PATCH" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/(.*).(js|css|png|jpg|svg|ico|webp)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}

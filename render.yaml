@@ -1,0 +1,59 @@
+## KisaanConnect — Render Deployment Configuration
+## Deploy the Node.js + Express backend as a Web Service.
+## Docs: https://render.com/docs/render-yaml
+
+services:
+  - type: web
+    name: kisaanconnect-api
+    env: node
+    plan: free        # upgrade to "starter" for always-on (no cold starts)
+    region: singapore # closest free region to India
+    branch: main
+    buildCommand: npm install --only=production
+    startCommand: node server.js
+    healthCheckPath: /api/health
+
+    ## ─── Environment Variables ─────────────────────────────────────────────
+    ## Set these in: Render Dashboard → Your Service → Environment
+    ## DO NOT hardcode secrets here — use the dashboard.
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+
+      ## Firebase — paste values from your .env file into Render dashboard
+      - key: FIREBASE_PROJECT_ID
+        sync: false   # set manually in Render dashboard
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false   # paste the full -----BEGIN PRIVATE KEY----- ... value
+
+      ## Email (OTP)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: "KisaanConnect <onboarding@resend.dev>"
+      - key: MAIL_USER
+        sync: false
+      - key: MAIL_PASS
+        sync: false
+
+      ## AI Keys
+      - key: GOOGLE_AI_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+
+      ## Weather
+      - key: WEATHER_API_KEY
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+
+      ## Admin
+      - key: ADMIN_EMAIL
+        value: admin@kisaanconnect.com
+      - key: ADMIN_PASSWORD
+        sync: false

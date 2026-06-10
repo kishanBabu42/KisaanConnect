@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "988035936319",
+    "project_id": "kisaanconnect-75b57",
+    "storage_bucket": "kisaanconnect-75b57.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988035936319:android:483d5a0768aac24bd6c88a",
+        "android_client_info": {
+          "package_name": "com.example.kisaanconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATwKY88ue3VQTqU_TLzLS_KWI20fz64Kk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
