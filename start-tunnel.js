@@ -225,7 +225,7 @@ async function main() {
 
     const serverProc = spawn(process.execPath, [path.join(__dirname, 'server.js')], {
         stdio: 'inherit',
-        env:   { ...process.env }
+        env:   { ...process.env, KISAAN_TUNNEL_ACTIVE: 'true' }
     });
 
     serverProc.on('error', (err) => {

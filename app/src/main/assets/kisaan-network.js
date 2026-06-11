@@ -293,14 +293,21 @@
             if (host !== 'localhost' && host !== '127.0.0.1') {
                 try { localStorage.setItem(STORAGE_KEY_LAST, host); } catch(e){}
             }
-            // ── Priority 0 upgrade: if server reports a tunnel URL, switch to it
+            // ── Priority 0 upgrade: if server reports a tunnel URL, verify and switch to it
             if (result.data && result.data.tunnelUrl) {
                 const tUrl = result.data.tunnelUrl.replace(/\/$/, '') + '/api';
-                console.log(`[KisaanNetwork] 🔗 Server has tunnel: ${tUrl}`);
-                try { localStorage.setItem(STORAGE_KEY_TUNNEL, result.data.tunnelUrl); } catch(e){}
-                global.API_URL = tUrl;
-                setConnectionDot(true, '🌐 tunnel');
-                return tUrl;
+                console.log(`[KisaanNetwork] 🔗 Server reported tunnel: ${tUrl}. Verifying...`);
+                const tunnelPing = await pingUrl(tUrl);
+                if (tunnelPing.ok) {
+                    try { localStorage.setItem(STORAGE_KEY_TUNNEL, result.data.tunnelUrl); } catch(e){}
+                    global.API_URL = tUrl;
+                    setConnectionDot(true, '🌐 tunnel');
+                    console.log(`[KisaanNetwork] ✅ Switched to active tunnel: ${tUrl}`);
+                    return tUrl;
+                } else {
+                    console.warn(`[KisaanNetwork] ⚠️ Server reported tunnel is unreachable/stale.`);
+                    try { localStorage.removeItem(STORAGE_KEY_TUNNEL); } catch(e){}
+                }
             }
             setConnectionDot(true, host);
             console.log(`[KisaanNetwork] ✅ Connected to ${apiUrl}`);

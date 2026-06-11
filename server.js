@@ -173,8 +173,13 @@ if (fs.existsSync(_tunnelFile)) {
         } catch(e) { _tunnelUrl = null; }
     });
 }
-// Load on startup (in case server restarted while tunnel was already running)
-try { _tunnelUrl = require('fs').readFileSync(_tunnelFile, 'utf8').trim(); } catch(e) {}
+// Load on startup (only if tunnel runner spawned us, otherwise ignore stale file)
+if (process.env.KISAAN_TUNNEL_ACTIVE === 'true') {
+    try { _tunnelUrl = require('fs').readFileSync(_tunnelFile, 'utf8').trim(); } catch(e) {}
+} else {
+    _tunnelUrl = null;
+    try { if (fs.existsSync(_tunnelFile)) fs.unlinkSync(_tunnelFile); } catch(e) {}
+}
 
 app.get('/api/ping', (req, res) => {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
