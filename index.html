@@ -31,6 +31,36 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <style>
+        /* Professional Security Modal */
+        .pro-modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .pro-modal {
+            background: var(--card-bg); border-radius: 32px; padding: 40px;
+            max-width: 440px; width: 100%; border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.3); text-align: center;
+            animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .pro-modal-icon {
+            width: 80px; height: 80px; background: #fff1f2; color: #e11d48;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin: 0 auto 24px;
+        }
+        .pro-modal h3 { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+        .pro-modal p { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+        .pro-modal .code-chip {
+            background: var(--bg-soft); border: 1px solid var(--border);
+            padding: 12px 20px; border-radius: 16px; font-family: monospace;
+            font-size: 13px; color: var(--primary); display: flex;
+            align-items: center; justify-content: space-between; margin-bottom: 24px;
+        }
+        .pro-modal .btn-stack { display: flex; flex-direction: column; gap: 12px; }
+        @keyframes modalSlideUp { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         :root {
             --primary: #059669;
             --primary-light: #10b981;
@@ -1704,14 +1734,21 @@
         window.onload = function() {
             KisaanNetwork.init().then(url => {
                 API_URL = url;
+                // Start the auto-reconnect watchdog AFTER first successful init
+                KisaanNetwork.startWatchdog();
             });
             init();
-            // Lightweight re-check every 15s (just ping, no full scan)
-            setInterval(async () => {
-                const r = await KisaanNetwork.ping(API_URL);
-                KisaanNetwork.setDot(r.ok, null);
-                if (!r.ok) { API_URL = window.API_URL; }
-            }, 15000);
+
+            // Pre-initialize Google GSI for better reliability
+            if (window.google && window.google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleCredential,
+                    auto_select: false
+                });
+                // Show One Tap prompt immediately on load
+                google.accounts.id.prompt();
+            }
         };
 
 
@@ -1820,58 +1857,73 @@
         }
 
         function handleGoogleSignIn() {
-            const btn = document.getElementById('google-signin-btn');
-            const spinner = document.getElementById('google-btn-spinner');
-            const icon    = document.getElementById('google-btn-icon');
-            const text    = document.getElementById('google-btn-text');
+            var btn = document.getElementById('google-signin-btn');
+            var spinner = document.getElementById('google-btn-spinner');
+            var icon    = document.getElementById('google-btn-icon');
+            var text    = document.getElementById('google-btn-text');
 
+            if (!window.google || !window.google.accounts) {
+                alert('Google Sign-In is still loading. Please wait a moment and try again.');
+                return;
+            }
+
+            // Always re-initialize with callback before triggering any flow
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleGoogleCredential,
+                auto_select: false,
+            });
+
+            var origin = window.location.origin;
+            var isIP = /^(http|https)://(d+.){3}d+/.test(origin);
+
+            if (isIP) {
+                // On local IP origins: Google One Tap is blocked by browser security policy,
+                // but google.accounts.id.renderButton() works because it runs inside
+                // Google's own sandboxed iframe (no JS origin restriction for the iframe).
+                btn.innerHTML = '';
+                btn.style.cssText = 'width:100%;padding:0;background:transparent;border:none;box-shadow:none;overflow:visible;border-radius:0;';
+                google.accounts.id.renderButton(btn, {
+                    theme:          'outline',
+                    size:           'large',
+                    width:          (btn.parentElement ? btn.parentElement.offsetWidth - 4 : 380),
+                    text:           'signin_with',
+                    shape:          'rectangular',
+                    logo_alignment: 'left',
+                });
+                return;
+            }
+
+            // Non-IP origin (localhost, production domain): use One Tap popup flow
             spinner.style.display = 'block';
             icon.style.display = 'none';
             text.textContent = 'Connecting…';
             btn.disabled = true;
 
-            // Prompt the Google Account Chooser popup
-            if (window.google && window.google.accounts) {
-                google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    callback: (resp) => {
-                        spinner.style.display = 'none';
-                        icon.style.display = '';
-                        text.textContent = 'Sign in with Google';
-                        btn.disabled = false;
-                        handleGoogleCredential(resp);
-                    },
-                    auto_select: false,
-                    cancel_on_tap_outside: true,
-                });
-                google.accounts.id.prompt((notification) => {
-                    // If One Tap is suppressed (user dismissed before), use popup flow
-                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                        google.accounts.id.renderButton(
-                            document.createElement('div'),
-                            { type: 'standard', theme: 'outline' }
-                        );
-                        // Fallback: use renderButton in an invisible div and auto-click
-                        spinner.style.display = 'none';
-                        icon.style.display = '';
-                        text.textContent = 'Sign in with Google';
-                        btn.disabled = false;
-                        // Use FedCM / popup directly
-                        google.accounts.oauth2.initCodeClient({
-                            client_id: GOOGLE_CLIENT_ID,
-                            scope: 'openid email profile',
-                            callback: () => {},
-                        });
-                        alert('Please click "Sign in with Google" button again. Your browser may have suppressed the popup — check if popups are blocked.');
-                    }
-                });
-            } else {
-                spinner.style.display = 'none';
-                icon.style.display = '';
-                text.textContent = 'Sign in with Google';
-                btn.disabled = false;
-                alert('Google Sign-In is loading. Please try again in a moment.');
-            }
+            google.accounts.id.prompt(function(notification) {
+                if (notification.isSkippedMoment() || notification.isDismissedMoment()) {
+                    spinner.style.display = 'none';
+                    icon.style.display = '';
+                    text.textContent = 'Sign in with Google';
+                    btn.disabled = false;
+                }
+                if (notification.isNotDisplayed()) {
+                    console.warn('Google One Tap suppressed:', notification.getNotDisplayedReason());
+                    // Fallback: render official Google button (works in secure iframe context)
+                    btn.innerHTML = '';
+                    btn.style.cssText = 'width:100%;padding:0;background:transparent;border:none;box-shadow:none;overflow:visible;border-radius:0;';
+                    google.accounts.id.renderButton(btn, {
+                        theme:          'outline',
+                        size:           'large',
+                        width:          (btn.parentElement ? btn.parentElement.offsetWidth - 4 : 380),
+                        text:           'signin_with',
+                        shape:          'rectangular',
+                        logo_alignment: 'left',
+                    });
+                    spinner.style.display = 'none';
+                    btn.disabled = false;
+                }
+            });
         }
 
         function showGoogleRoleModal(payload) {
@@ -1930,8 +1982,8 @@
             }
         }
 
-        // Init Google GSI on page load
-        window.addEventListener('load', function() {
+        // Init Google GSI on DOMContentLoaded (faster than 'load') and on 'load' as backup
+        function _initGSI() {
             if (window.google && window.google.accounts) {
                 google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
@@ -1939,7 +1991,11 @@
                     auto_select: false,
                 });
             }
-        });
+        }
+        document.addEventListener('DOMContentLoaded', _initGSI);
+        window.addEventListener('load', _initGSI);
+        // GSI script loaded async — also listen for it becoming ready
+        document.querySelector('script[src*="gsi/client"]')?.addEventListener('load', _initGSI);
     </script>
     <!-- ✅ Google Role-Selection Modal -->
     <div id="google-role-modal" class="google-role-modal" onclick="if(event.target===this)closeGoogleRoleModal()">
@@ -1978,5 +2034,49 @@
             <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0;">🌾 KisaanConnect &nbsp;•&nbsp; Free</p>
         </div>
     </div>
+    <!-- PROFESSIONAL SECURITY MODAL -->
+    <div id="google-origin-modal" class="pro-modal-overlay">
+        <div class="pro-modal">
+            <div class="pro-modal-icon"><i class="fas fa-shield-halved"></i></div>
+            <h3>Security Origin Mismatch</h3>
+            <p>Google requires all Auth origins to be whitelisted. Your current address is not registered in the Google Cloud Console.</p>
+
+            <div class="code-chip">
+                <span id="current-origin-text"></span>
+                <i class="fas fa-copy" onclick="copyOrigin()" style="cursor:pointer; padding:5px;"></i>
+            </div>
+
+            <div class="btn-stack">
+                <button class="btn-primary" onclick="window.location.href='http://localhost:3000'" style="background: #0f172a;">
+                    <i class="fas fa-desktop"></i> Switch to Localhost
+                </button>
+                <button class="btn-primary" onclick="closeOriginModal(); forceGoogleButton();">
+                    <i class="fab fa-google"></i> Try Fallback Button
+                </button>
+                <a href="#" onclick="closeOriginModal(); return false;" style="color:var(--text-muted); font-size:13px; text-decoration:none; margin-top:8px;">Dismiss</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showGoogleOriginModal(origin) {
+            document.getElementById('current-origin-text').textContent = origin;
+            document.getElementById('google-origin-modal').style.display = 'flex';
+        }
+        function closeOriginModal() {
+            document.getElementById('google-origin-modal').style.display = 'none';
+        }
+        function copyOrigin() {
+            const txt = document.getElementById('current-origin-text').textContent;
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast("📋 Origin copied! Add this to Google Console.");
+            });
+        }
+        function forceGoogleButton() {
+            const btn = document.getElementById('google-signin-btn');
+            btn.innerHTML = '';
+            google.accounts.id.renderButton(btn, { theme: "outline", size: "large", width: btn.offsetWidth, shape: "pill" });
+        }
+    </script>
 </body>
 </html>

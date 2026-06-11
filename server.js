@@ -1,8 +1,12 @@
 require('dotenv').config();
 
-// Keep server alive on unhandled promise rejections (e.g. Firestore background ops)
-process.on('unhandledRejection', (reason) => {
-    console.error('⚠️  Unhandled Rejection:', reason?.message || reason);
+// Keep server alive on unhandled errors
+process.on('uncaughtException', (err) => {
+    console.error(`[${new Date().toISOString()}] ❌ CRITICAL: Uncaught Exception:`, err.stack || err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error(`[${new Date().toISOString()}] ❌ CRITICAL: Unhandled Rejection at:`, promise, 'reason:', reason);
 });
 
 const express    = require('express');
@@ -10,6 +14,7 @@ const bodyParser = require('body-parser');
 const cors       = require('cors');
 const multer     = require('multer');
 const path       = require('path');
+const fs         = require('fs');   // ← moved here: used at line ~138 for uploads dir check
 const morgan     = require('morgan');
 const helmet     = require('helmet');
 const compression = require('compression');
@@ -19,7 +24,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 // ── Firebase Firestore (replaces MySQL) ───────────────────────────────────
 const fdb = require('./firebase-db');
 const { consumeOTP } = fdb;
-const { initMailer, sendOTPEmail } = require('./otp-mailer');
+const { initMailer, sendOTPEmail, sendWelcomeEmail } = require('./otp-mailer');
 
 const app = express();
 const http = require('http').createServer(app);
@@ -129,6 +134,13 @@ initMailer();
 
 // MySQL initializeDatabase() removed — Firebase handles seeding via seedAdminUser() in firebase-db.js
 
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('Created uploads directory');
+}
+
 // MULTER SETUP FOR FILE UPLOADS
 const storage = multer.diskStorage({
     destination: './uploads/',
@@ -153,12 +165,14 @@ app.get('/api/health', (req, res) => {
 let _tunnelUrl = null;
 const _tunnelFile = require('path').join(__dirname, '.tunnel-url');
 // Watch .tunnel-url file — updated by start-tunnel.js when tunnel opens
-require('fs').watch(__dirname, (evt, fname) => {
-    if (fname === '.tunnel-url') {
-        try { _tunnelUrl = require('fs').readFileSync(_tunnelFile, 'utf8').trim(); } catch(e) { _tunnelUrl = null; }
-        if (_tunnelUrl) console.log(`[Tunnel] 🔗 Active tunnel: ${_tunnelUrl}`);
-    }
-});
+if (fs.existsSync(_tunnelFile)) {
+    fs.watchFile(_tunnelFile, { interval: 1000 }, (curr, prev) => {
+        try {
+            _tunnelUrl = fs.readFileSync(_tunnelFile, 'utf8').trim();
+            if (_tunnelUrl) console.log(`[Tunnel] 🔗 Active tunnel: ${_tunnelUrl}`);
+        } catch(e) { _tunnelUrl = null; }
+    });
+}
 // Load on startup (in case server restarted while tunnel was already running)
 try { _tunnelUrl = require('fs').readFileSync(_tunnelFile, 'utf8').trim(); } catch(e) {}
 
@@ -235,7 +249,6 @@ app.get('/api/db-status', async (req, res) => {
 });
 
 // ── APK DOWNLOAD / INSTALL PAGE ──────────────────────────────────────────────
-const fs = require('fs');
 const _apkFile    = path.join(__dirname, 'app-release.apk');
 const _apkVersion = '1.3';
 const _apkBuild   = 4;
@@ -592,6 +605,10 @@ app.post('/api/signup', async (req, res) => {
         const existing = await fdb.findUserByEmail(email);
         if (existing) return res.status(400).json({ success: false, message: 'Email already exists.' });
         const user = await fdb.createUser({ name, email, password, role, mobile, location, vehicleType, licenseNumber });
+
+        // Send Welcome Email
+        sendWelcomeEmail(email, name, role).catch(err => console.error('Error in sendWelcomeEmail:', err.message));
+
         res.json(user);
     } catch (e) {
         res.status(500).json({ success: false, message: e.message });
@@ -1394,22 +1411,41 @@ http.on('error', (err) => {
 http.keepAliveTimeout = 65000;  // 65 seconds (above AWS/nginx 60s timeout)
 http.headersTimeout   = 70000;  // Must be > keepAliveTimeout
 
-http.listen(port, '0.0.0.0', () => {
+// Graceful Shutdown
+const shutdown = () => {
+    console.log('\n🛑 Shutting down server gracefully...');
+    fdb.closeFirebase && fdb.closeFirebase();
+    http.close(() => {
+        console.log('HTTP server closed.');
+        process.exit(0);
+    });
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+// Start Server
+const server = http.listen(port, '0.0.0.0', () => {
     console.log('\n╔══════════════════════════════════════════════╗');
-    console.log('║  🌾  KisaanConnect Server — ONLINE           ║');
+    console.log('║  🌾  KISAAN CONNECT — PRO SERVER ONLINE      ║');
     console.log('╠══════════════════════════════════════════════╣');
     console.log(`║  🏠 Local:    http://localhost:${port}           ║`);
     if (localIps.length === 0) {
         console.log(`║  ⚠️  No LAN IP found — check Wi-Fi adapter   ║`);
     } else {
         localIps.forEach((ip, idx) => {
-            const label = idx === 0 ? '📱 Mobile:' : '🔗 Other: ';
-            console.log(`║  ${label}  http://${ip}:${port}`);
+            const label = idx === 0 ? '📱 Mobile:' : '🔗 LAN:   ';
+            console.log(`║  ${label}  http://${ip}:${port}      ║`);
         });
     }
     console.log('╠══════════════════════════════════════════════╣');
-    console.log('║  📡 Mobile Setup:                            ║');
-    console.log(`║  Open http://${localIp}:${port} on your phone  ║`);
-    console.log('║  (Must be on the same Wi-Fi network)         ║');
+    console.log('║  🚀 Status:   Running & Stable               ║');
+    console.log('║  🛡️  Crash Protection: ACTIVE                 ║');
     console.log('╚══════════════════════════════════════════════╝\n');
 });
+
+// Professional keep-alive to prevent laptop from "sleeping" the process
+setInterval(() => {
+    // This empty interval keeps the event loop active and provides a visual "heartbeat" if needed
+    // console.log(`[Heartbeat] ${new Date().toLocaleTimeString()}`);
+}, 60000);

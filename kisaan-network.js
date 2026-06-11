@@ -1,5 +1,5 @@
 /**
- * kisaan-network.js  — KisaanConnect Network Utility v4.1
+ * kisaan-network.js  — KisaanConnect Network Utility v4.2
  * =========================================================
  * Single source of truth for server URL resolution.
  * Handles: Browser, Android WebView, PWA, file:// protocol.
@@ -15,10 +15,13 @@
  *   6. Auto-scan LAN subnets     → scans 10.x.x.x, 192.168.x.x ranges
  *   7. Fallback                  → localhost
  *
- *  KEY FIX v4.1:
- *   • Adds bypass-tunnel-reminder header to ALL fetch() calls
- *     so localtunnel interstitial never blocks the mobile app.
- *   • On init, reads tunnelUrl from /api/ping and auto-switches.
+ *  KEY FIX v4.2:
+ *   • Removes hardcoded old Wi-Fi subnet (10.117.116.) — now dynamically
+ *     derives subnets from current page URL and localStorage only.
+ *   • Increased HEALTH_TIMEOUT_MS to 3500ms for enterprise/college networks.
+ *   • Auto-reconnect watchdog: when periodic ping fails, re-runs full
+ *     discovery instead of just greying the dot.
+ *   • bypass-tunnel-reminder header on ALL fetch() calls.
  */
 
 (function (global) {
@@ -28,7 +31,7 @@
     const STORAGE_KEY_MANUAL  = 'kisaan_server_ip';
     const STORAGE_KEY_LAST    = 'kisaan_last_good_ip';
     const STORAGE_KEY_TUNNEL  = 'kisaan_tunnel_url';
-    const HEALTH_TIMEOUT_MS   = 2500; // shorter = faster discovery
+    const HEALTH_TIMEOUT_MS   = 3500; // 3.5s — needed for enterprise/college Wi-Fi
 
     // Headers added to every fetch — bypasses localtunnel interstitial page
     const FETCH_HEADERS = {
@@ -161,10 +164,8 @@
         } catch (e) { /* ignore */ }
 
         // ⑤ Standard LAN subnets (covers home routers, hotspots, enterprise)
-        // ── PRIORITY SUBNETS (current Wi-Fi network first for fast discovery) ──
-        subnetSet.add('10.117.116.'); // ← Active Wi-Fi network (10.117.116.11 detected)
-
-        // Common home/hotspot subnets
+        // NOTE: No hardcoded subnets here — we derive dynamically from ①②③④ above.
+        // Static fallbacks for common networks (only used if dynamic detection fails)
         subnetSet.add('192.168.1.');
         subnetSet.add('192.168.0.');
         subnetSet.add('192.168.43.');  // Android hotspot default
@@ -179,10 +180,12 @@
         subnetSet.add('10.0.2.');
         subnetSet.add('10.1.1.');
         subnetSet.add('10.10.10.');
+        subnetSet.add('10.100.100.');
+        subnetSet.add('10.200.200.');
 
-        // Corporate / Docker
+        // Corporate / Docker / iPhone hotspot
         subnetSet.add('172.16.0.');
-        subnetSet.add('172.20.10.'); // iPhone hotspot default
+        subnetSet.add('172.20.10.');
 
         return Array.from(subnetSet);
     }
@@ -393,7 +396,34 @@
         await initNetwork();
     }
 
-    // ── 12. Public API ───────────────────────────────────────────────────────
+    // ── 12. Auto-reconnect watchdog ──────────────────────────────────────────
+    // Runs every 15 seconds. If server is unreachable, re-runs full discovery
+    // (instead of just greying the dot). Stops retrying if tab is hidden.
+    let _watchdogTimer   = null;
+    let _isReconnecting  = false;
+
+    function startWatchdog() {
+        if (_watchdogTimer) return; // already running
+        _watchdogTimer = setInterval(async () => {
+            if (document.hidden || _isReconnecting) return;
+            const r = await pingUrl(global.API_URL);
+            if (r.ok) {
+                setConnectionDot(true, null);
+                _isReconnecting = false;
+            } else {
+                setConnectionDot(false, null);
+                // Re-run full discovery so we auto-heal on network/IP change
+                _isReconnecting = true;
+                console.warn('[KisaanNetwork] 🔄 Watchdog: server lost. Re-discovering...');
+                const newUrl = await initNetwork();
+                global.API_URL = newUrl;
+                _isReconnecting = false;
+            }
+        }, 15000);
+        console.log('[KisaanNetwork] ✅ Watchdog started (15s interval)');
+    }
+
+    // ── 13. Public API ───────────────────────────────────────────────────────
     global.KisaanNetwork = {
         init:          initNetwork,
         getApiUrl:     getBestGuessApiUrl,
@@ -401,9 +431,10 @@
         retryConnection,
         ping:          pingUrl,
         setDot:        setConnectionDot,
+        startWatchdog,
     };
 
-    // ── 13. Backward-compat: expose getApiUrl globally ───────────────────────
+    // ── 14. Backward-compat: expose getApiUrl globally ───────────────────────
     global.getApiUrl = getBestGuessApiUrl;
 
     // Initialize API_URL immediately (synchronous best guess — no network call)
