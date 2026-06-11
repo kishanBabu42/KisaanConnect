@@ -8,7 +8,7 @@ object ApiClient {
     // If the server moves to a different IP, update this value and rebuild.
     // The WebView kisaan-network.js auto-discovers the IP dynamically,
     // but Retrofit (used for native API calls) needs a fixed base URL.
-    const val BASE_URL = "http://10.117.116.11:3001/"
+    const val BASE_URL = "http://10.117.116.11:3000/"
 
     private var retrofit: Retrofit? = null
 

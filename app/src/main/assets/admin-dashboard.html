@@ -10,7 +10,7 @@
         const isAndroid = navigator.userAgent.toLowerCase().includes('android');
         const serverIp = localStorage.getItem('kisaan_server_ip') || (isAndroid ? '10.0.2.2' : 'localhost');
         const host = (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.hostname : serverIp;
-        const API_URL = `http://${host}:3001/api`;
+        const API_URL = `http://${host}:3000/api`;
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>

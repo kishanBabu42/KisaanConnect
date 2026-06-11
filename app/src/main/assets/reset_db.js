@@ -20,6 +20,8 @@ CREATE TABLE users (
     role ENUM('farmer', 'customer', 'delivery', 'admin') NOT NULL,
     mobile VARCHAR(20),
     location VARCHAR(255),
+    profilePic TEXT,
+    googleId VARCHAR(255),
     lat DECIMAL(10,8),
     lng DECIMAL(11,8),
     bio TEXT,

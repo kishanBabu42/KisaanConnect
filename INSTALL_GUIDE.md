@@ -34,7 +34,7 @@ The app connects to your local server over Wi-Fi.
 
 - ✅ **Phone and PC must be on the SAME Wi-Fi network**
 - The server PC's IP address is: **10.117.116.11**
-- The server runs on port: **3001**
+- The server runs on port: **3000**
 
 **To start the server on your PC:**
 ```
@@ -59,7 +59,7 @@ Once the server is running, open the app — it will auto-connect.
 - App Version: 1.3 (Build 4)
 - Firebase Project: kisaanconnect-75b57
 - Firebase Database: africa-south1 ✅
-- Server IP: 10.117.116.11:3001
+- Server IP: 10.117.116.11:3000
 - Min Android: 7.0 (API 24)
 - Built: June 2026
 

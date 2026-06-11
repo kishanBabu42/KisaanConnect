@@ -27,7 +27,7 @@
         function loadSocketScript() {
             return new Promise((resolve) => {
                 _refreshHost();
-                const socketUrl = `http://${host}:3001/socket.io/socket.io.js`;
+                const socketUrl = `http://${host}:3000/socket.io/socket.io.js`;
                 const script = document.createElement('script');
                 script.src = socketUrl;
                 script.onload = resolve;
@@ -1800,7 +1800,7 @@
 
         function initSocket() {
             if (typeof io === 'undefined') return;
-            const socket = io(`http://${host}:3001`);
+            const socket = io(`http://${host}:3000`);
             socket.emit('join', currentUser.id);
 
             socket.on('new_quote', (data) => {

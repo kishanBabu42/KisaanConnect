@@ -211,7 +211,7 @@
                 let defaultIp = isAndroid ? '10.0.2.2' : 'localhost';
                 let serverIp = localStorage.getItem('kisaan_server_ip') || defaultIp;
                 const host = (window.location.hostname && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') ? window.location.hostname : serverIp;
-                API_URL = `http://${host}:3001/api`;
+                API_URL = `http://${host}:3000/api`;
             }
 
             try {
