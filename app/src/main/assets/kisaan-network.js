@@ -49,10 +49,23 @@
 
     // ── 2. Synchronous best-guess (for immediate page load) ──────────────────
     function getBestGuessApiUrl() {
-        // Priority 0: Production Render URL (set by env-config.js on Vercel)
+        // Priority 0: Browser served from IP address (mobile opened http://10.x.x.x:3000)
+        // THIS IS THE MOST RELIABLE SOURCE!
+        try {
+            const host  = global.location.hostname;
+            const port  = global.location.port;
+            if (host && host !== '' && host !== 'localhost' && host !== '127.0.0.1' && /^\d/.test(host)) {
+                return buildUrl(host, '/api');
+            }
+            // Also handle localhost
+            if (host === 'localhost' || host === '127.0.0.1') {
+                return buildUrl('localhost', '/api');
+            }
+        } catch (e) { }
+
+        // Priority 1: Production Render URL (set by env-config.js on Vercel)
         if (global.KISAAN_RENDER_URL && global.KISAAN_RENDER_URL.trim()) {
-            const renderBase = global.KISAAN_RENDER_URL.replace(/\/$/, '');
-            return renderBase + '/api';
+            return global.KISAAN_RENDER_URL.replace(/\/$/, '') + '/api';
         }
         // Also check KISAAN_API_URL directly (set by env-config.js)
         if (global.KISAAN_API_URL && global.KISAAN_API_URL.trim()) {
@@ -381,6 +394,14 @@
 
     // ── 10. Manual IP prompt ─────────────────────────────────────────────────
     function promptManualIp() {
+        if (confirm("Reset network settings and scan for server?")) {
+            localStorage.removeItem(STORAGE_KEY_MANUAL);
+            localStorage.removeItem(STORAGE_KEY_LAST);
+            localStorage.removeItem(STORAGE_KEY_TUNNEL);
+            location.reload();
+            return;
+        }
+
         let current = '';
         try { current = localStorage.getItem(STORAGE_KEY_MANUAL) || ''; } catch(e){}
         const input = prompt(

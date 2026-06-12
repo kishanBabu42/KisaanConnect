@@ -7,6 +7,8 @@
     <link rel="manifest" href="manifest.json">
     <!-- ✅ Production env config: sets KISAAN_RENDER_URL for Vercel → Render routing -->
     <script src="env-config.js"></script>
+    <!-- ✅ Network utility: auto-discovers server IP, handles Android/PWA/Browser -->
+    <script src="kisaan-network.js"></script>
     <meta name="theme-color" content="#0277bd">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta name="description" content="Secure portal for KisaanConnect administrators to manage the indirect marketplace and user data.">
@@ -125,15 +127,41 @@
 
         <button class="btn-login" onclick="handleLogin()" id="btn-text">Authenticate</button>
 
+        <div style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; color: var(--text-muted); font-weight: 700; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 10px;">
+            <span id="connection-dot" style="width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;"></span>
+            <span id="server-ip-text">CONNECTING...</span>
+        </div>
+
         <div class="lang-switch">
             <span class="lang-link active" onclick="setLang('en')">EN</span>
             <span class="lang-link" onclick="setLang('hi')">HI</span>
             <span class="lang-link" onclick="setLang('te')">TE</span>
         </div>
+
+        <a href="index.html" class="back-link" id="back-text">← Back to Public Site</a>
     </div>
 
     <script>
+        // Ensure global API_URL is available
+        window.API_URL = window.API_URL || 'http://localhost:3000/api';
+
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+        // Initialize KisaanNetwork immediately
+        window.onload = async () => {
+            if (window.location.protocol === 'file:') {
+                alert("⚠️ WARNING: You are opening this file directly. \n\nFor the Admin Portal to work, please open it through the server: \nhttp://localhost:3000/admin-login.html");
+            }
+
+            if (window.KisaanNetwork) {
+                const url = await KisaanNetwork.init();
+                window.API_URL = url;
+                console.log("[Admin] 🌐 Connected to:", url);
+                KisaanNetwork.startWatchdog();
+            }
+            updateUI();
+        };
+
         let currentLang = localStorage.getItem('kisaan_lang') || 'en';
 
         const translations = {
@@ -189,11 +217,17 @@
         }
 
         function updateUI() {
-            document.getElementById('subtitle').textContent = getT('subtitle');
-            document.getElementById('label-email').textContent = getT('email');
-            document.getElementById('label-pass').textContent = getT('pass');
-            document.getElementById('btn-text').textContent = getT('auth');
-            document.getElementById('back-text').textContent = getT('back');
+            const subtitle = document.getElementById('subtitle');
+            const labelEmail = document.getElementById('label-email');
+            const labelPass = document.getElementById('label-pass');
+            const btnText = document.getElementById('btn-text');
+            const backText = document.getElementById('back-text');
+
+            if (subtitle) subtitle.textContent = getT('subtitle');
+            if (labelEmail) labelEmail.textContent = getT('email');
+            if (labelPass) labelPass.textContent = getT('pass');
+            if (btnText) btnText.textContent = getT('auth');
+            if (backText) backText.textContent = getT('back');
 
             document.querySelectorAll('.lang-link').forEach(link => {
                 link.classList.toggle('active', link.textContent.toLowerCase() === currentLang);
@@ -201,27 +235,24 @@
         }
 
         async function handleLogin() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const pass = document.getElementById('password').value;
 
-            // Get API URL from Render production URL, Android interface, or fallback
-            let API_URL;
-            if (window.KISAAN_RENDER_URL && window.KISAAN_RENDER_URL.trim()) {
-                API_URL = window.KISAAN_RENDER_URL.replace(/\/$/, '') + '/api';
-            } else if (window.Android && window.Android.getServerUrl) {
-                API_URL = window.Android.getServerUrl();
-            } else {
-                const isAndroid = navigator.userAgent.toLowerCase().includes('android');
-                let defaultIp = isAndroid ? '10.0.2.2' : 'localhost';
-                let serverIp = localStorage.getItem('kisaan_server_ip') || defaultIp;
-                const host = (window.location.hostname && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') ? window.location.hostname : serverIp;
-                API_URL = `http://${host}:3000/api`;
-            }
+            // Use discovered API_URL
+            const API_URL = window.API_URL;
+
+            const btn = document.querySelector('.btn-login');
+            const origText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
 
             try {
                 const response = await fetch(`${API_URL}/admin/login`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'bypass-tunnel-reminder': 'kisaanconnect'
+                    },
                     body: JSON.stringify({ email, password: pass })
                 });
 
@@ -230,11 +261,16 @@
                     sessionStorage.setItem('current_user', JSON.stringify(admin));
                     window.location.href = 'admin-dashboard.html';
                 } else {
-                    alert(translations[currentLang].error);
+                    const data = await response.json().catch(() => ({}));
+                    alert(data.message || translations[currentLang].error);
                 }
             } catch (error) {
                 console.error("API Error:", error);
-                alert("Could not connect to server.");
+                alert("❌ Connection Failed\n\nCould not reach the server at:\n" + API_URL + "\n\n1. Ensure the Node.js server is running.\n2. If using mobile, ensure same Wi-Fi.\n3. Try clicking 'Set IP' if using custom address.");
+                if (window.KisaanNetwork) KisaanNetwork.showOfflineBanner();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = origText;
             }
         }
 

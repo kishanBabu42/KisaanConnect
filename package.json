@@ -1,15 +1,18 @@
 {
   "name": "kisaan-connect-backend",
   "version": "1.0.0",
+  "homepage": "https://YOUR_USERNAME.github.io/YOUR_REPO",
   "description": "Backend for KisaanConnect app",
   "main": "server.js",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start":  "node server.js",
+    "start": "node server.js",
     "tunnel": "node start-tunnel.js",
-    "build":  "node build-env.js"
+    "build": "node build-env.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -28,6 +31,7 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "localtunnel": "^2.0.2"
   }
 }

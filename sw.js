@@ -2,7 +2,7 @@
 // KEY FIX: API calls (/api/*) are ALWAYS fetched from network — never served from cache.
 // This is the #1 cause of "offline" on mobile: the SW was intercepting API calls.
 
-const CACHE_NAME = 'kisaan-v6';
+const CACHE_NAME = 'kisaan-v8';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

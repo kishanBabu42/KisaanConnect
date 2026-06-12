@@ -1,0 +1,39 @@
+name: Opt-in Node.js 24 for JavaScript Actions
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+
+# This workflow sets FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true at workflow level
+# which forces JavaScript actions to run on Node.js 24 on the runner.
+# Use this to opt in now and avoid deprecation warnings when Node.js 20 is removed.
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js (for job steps)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Archive build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: build

@@ -112,7 +112,10 @@ function makeSmtpTransport(port, secure) {
       user: process.env.MAIL_USER,
       pass: process.env.MAIL_PASS
     },
-    tls: { rejectUnauthorized: false }
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
 }
 
@@ -141,7 +144,8 @@ function initMailer() {
           smtpReady = true;
           console.log('✅ Gmail SMTP ready (port 587):', user);
         } else {
-          console.error('❌ Gmail SMTP failed on both ports.');
+          console.error('❌ Gmail SMTP failed on both ports. ISP likely blocks port 465/587.');
+          console.log('👉 RECOMMENDATION: Set RESEND_API_KEY in .env for reliable delivery via HTTPS (Port 443).');
         }
       });
     }

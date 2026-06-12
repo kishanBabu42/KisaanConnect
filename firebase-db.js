@@ -169,6 +169,8 @@ async function seedAdminUser() {
             location: 'HQ'
         });
         console.log('✅ Admin user seeded:', adminEmail);
+    } else {
+        console.log('ℹ️  Admin user already exists:', adminEmail);
     }
 }
 

@@ -1,0 +1,41 @@
+Feature,Description,User Role
+Landing Page,Displays the KisaanConnect marketplace introduction and app description,All
+Login / Signup,Allows users to authenticate and create accounts via the website,All
+Role Selection,Users choose between customer, farmer, or admin paths before accessing dashboards,All
+Search Products,Customers search fresh produce using keywords or filters,Customer
+Product Filters,Customers filter listings by category, price, or nearby availability,Customer
+Marketplace Browsing,Customers browse products with farmer details and pricing,Customer
+Wishlist Management,Customers save favorite products for later review,Customer
+Order Placement,Customers place orders for products from farmers,Customer
+Checkout Payments,Customers choose payment options such as UPI, card, bank, wallet, or COD,Customer
+Order Status Tracking,Customers see current order progress and delivery status,Customer
+Order History,Customers review past purchases and payment history,Customer
+Weekly Subscriptions,Customers subscribe to recurring weekly deliveries of produce,Customer
+Community Board,Customers post questions and connect with others,Customer
+Share App,Customers and farmers can share the app link with others,Customer/Farmer
+Dark Mode / Theme Toggle,Users can switch between light and dark themes,All
+Customer Spending Dashboard,Customers view total spent and payment summary,Customer
+Farmer Dashboard Overview,Farmers view active products, sales, pending quotes, and ratings,Farmer
+Post New Harvest,Farmers add new products and harvest listings for sale,Farmer
+Manage Products,Farmers edit, update, and remove their product listings,Farmer
+Quote Requests,Farmers review and accept customer quote requests and orders,Farmer
+Disease Scanner,Farmers upload leaf photos for AI-driven disease analysis,Farmer
+AI Remedies,Farmers receive treatment suggestions for crop diseases,Farmer
+Scan History,Farmers view past disease scans and diagnoses,Farmer
+Weekly Subscriptions Management,Farmers approve subscription requests for recurring deliveries,Farmer
+Weather Alerts,Farmers access live weather data and refresh forecasts,Farmer
+Analytics Dashboard,Farmers view charts and performance metrics,Farmer
+Planner / Calendar,Farmers use a planner for schedules and reminders,Farmer
+Sold History,Farmers review past sold products and order history,Farmer
+Payments & Wallet,Farmers manage payment records and wallet balances,Farmer
+Admin Dashboard Overview,Admin views platform statistics and metrics,Admin
+Manage Farmers,Admin monitors and manages farmer accounts,Admin
+Manage Customers,Admin monitors and manages customer accounts,Admin
+Manage Products,Admin reviews and controls product listings,Admin
+Manage Orders,Admin tracks and monitors all platform orders,Admin
+Manage Fees,Admin configures platform fees and payment details,Admin
+Manage Subscriptions,Admin supervises subscriptions and weekly plans,Admin
+Manage Payments,Admin reviews all payments and wallet activity,Admin
+Manage Community,Admin oversees community posts and user interactions,Admin
+Reports / Export,Admin exports reports and data summary via PDF utilities,Admin
+"Install / APK Link",Users can download or install the Android app via app link,All

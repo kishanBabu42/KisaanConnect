@@ -2,12 +2,13 @@
 // KEY FIX: API calls (/api/*) are ALWAYS fetched from network — never served from cache.
 // This is the #1 cause of "offline" on mobile: the SW was intercepting API calls.
 
-const CACHE_NAME = 'kisaan-v6';
+const CACHE_NAME = 'kisaan-v8';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/farmer-dashboard.html',
     '/customer-dashboard.html',
+    '/offline.html',
     '/manifest.json',
     '/logo.png',
     '/veggies.png',
@@ -72,8 +73,8 @@ self.addEventListener('fetch', (e) => {
                     return res;
                 })
                 .catch(() => {
-                    // Offline: serve cached HTML
-                    return caches.match(e.request).then(r => r || caches.match('/index.html'));
+                    // Offline: serve cached HTML or the beautiful offline.html page
+                    return caches.match(e.request).then(r => r || caches.match('/offline.html') || caches.match('/index.html'));
                 })
         );
         return;

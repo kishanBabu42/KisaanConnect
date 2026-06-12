@@ -1,12 +1,15 @@
+console.log('🚀 [Boot] Initializing KisaanConnect Server...');
+
 require('dotenv').config();
 
 // Keep server alive on unhandled errors
 process.on('uncaughtException', (err) => {
-    console.error(`[${new Date().toISOString()}] ❌ CRITICAL: Uncaught Exception:`, err.stack || err);
+    console.error(`[${new Date().toISOString()}] ❌ CRITICAL ERROR:`, err.message);
+    console.error(err.stack);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.error(`[${new Date().toISOString()}] ❌ CRITICAL: Unhandled Rejection at:`, promise, 'reason:', reason);
+    console.error(`[${new Date().toISOString()}] ❌ UNHANDLED REJECTION:`, reason);
 });
 
 const express    = require('express');
@@ -110,6 +113,12 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     credentials: false,
 }));
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, bypass-tunnel-reminder');
+    next();
+});
 app.options('*', cors()); // Handle preflight for all routes
 
 // Increase payload limits for large images (Fixes "file too large" error)
@@ -129,8 +138,14 @@ app.use(express.static(__dirname, {
 }));
 
 // ── Initialize Firebase + Email ──────────────────────────────────────────
-fdb.initFirebase();
-initMailer();
+console.log('📦 [Boot] Connecting to Database...');
+try {
+    fdb.initFirebase();
+    console.log('📧 [Boot] Setting up Emailer...');
+    initMailer();
+} catch (bootErr) {
+    console.error('❌ [Boot] Initialization Failed:', bootErr.message);
+}
 
 // MySQL initializeDatabase() removed — Firebase handles seeding via seedAdminUser() in firebase-db.js
 
@@ -1288,6 +1303,30 @@ body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px;}
     res.json({ success: true, sent: false, receiptHtml, message: 'Receipt ready (no SMTP configured).' });
 });
 
+// ADMIN: Statistics
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const stats = await fdb.getAdminStats();
+        res.json(stats);
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ADMIN: All Users
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await fdb.getAllUsers();
+        res.json(users);
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ADMIN: Delete User
+app.delete('/api/admin/users/:id', async (req, res) => {
+    try {
+        await fdb.deleteUser(req.params.id);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ADMIN: All Products
 app.get('/api/admin/products', async (req, res) => {
     try {
@@ -1397,60 +1436,38 @@ app.post('/api/pay-pending-fee', async (req, res) => {
 // ── Start Server — with graceful EADDRINUSE handling ────────────────────────
 http.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-        console.error(`\n❌ Port ${port} is already in use — another server instance is running.`);
-        console.error(`\n   ✅ FIX (run ONE of these in PowerShell):`);
-        console.error(`   Option 1 — Kill the old process automatically:`);
-        console.error(`     npx kill-port ${port}`);
-        console.error(`   Option 2 — Find & kill manually:`);
-        console.error(`     netstat -ano | findstr :${port}   ← note the PID`);
-        console.error(`     taskkill /PID <PID> /F             ← kill it`);
-        console.error(`   Option 3 — Use a different port:`);
-        console.error(`     Set PORT=3001 in .env then restart\n`);
+        console.error(`\n❌ CRITICAL: Port ${port} is occupied!`);
+        console.error(`👉 FIX: Close all other terminal windows and run 'RUN_SERVER.bat'.`);
+        console.error(`👉 Or run: npx kill-port ${port}\n`);
         process.exit(1);
-    } else {
-        throw err;
     }
 });
 
-// Keep connections alive longer — prevents mobile network drops mid-request
-http.keepAliveTimeout = 65000;  // 65 seconds (above AWS/nginx 60s timeout)
-http.headersTimeout   = 70000;  // Must be > keepAliveTimeout
+// Professional keep-alive to prevent process sleeping
+setInterval(() => {}, 60000);
 
-// Graceful Shutdown
-const shutdown = () => {
-    console.log('\n🛑 Shutting down server gracefully...');
-    fdb.closeFirebase && fdb.closeFirebase();
-    http.close(() => {
-        console.log('HTTP server closed.');
-        process.exit(0);
-    });
-};
-
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-
-// Start Server
 const server = http.listen(port, '0.0.0.0', () => {
     console.log('\n╔══════════════════════════════════════════════╗');
     console.log('║  🌾  KISAAN CONNECT — PRO SERVER ONLINE      ║');
     console.log('╠══════════════════════════════════════════════╣');
     console.log(`║  🏠 Local:    http://localhost:${port}           ║`);
-    if (localIps.length === 0) {
-        console.log(`║  ⚠️  No LAN IP found — check Wi-Fi adapter   ║`);
-    } else {
-        localIps.forEach((ip, idx) => {
-            const label = idx === 0 ? '📱 Mobile:' : '🔗 LAN:   ';
-            console.log(`║  ${label}  http://${ip}:${port}      ║`);
-        });
-    }
+
+    // Improved IP display
+    localIps.forEach((ip, idx) => {
+        const label = idx === 0 ? '📱 Mobile:' : '🔗 LAN:   ';
+        console.log(`║  ${label}  http://${ip}:${port}      ║`);
+    });
+
     console.log('╠══════════════════════════════════════════════╣');
-    console.log('║  🚀 Status:   Running & Stable               ║');
-    console.log('║  🛡️  Crash Protection: ACTIVE                 ║');
+    console.log('║  🚀 Status:   RUNNING & STABLE               ║');
+    console.log('║  🛡️  Security: FIREWALL ACTIVE                ║');
     console.log('╚══════════════════════════════════════════════╝\n');
 });
 
-// Professional keep-alive to prevent laptop from "sleeping" the process
-setInterval(() => {
-    // This empty interval keeps the event loop active and provides a visual "heartbeat" if needed
-    // console.log(`[Heartbeat] ${new Date().toLocaleTimeString()}`);
-}, 60000);
+// Redirect root to landing page for professional first impression
+app.get('/', (req, res, next) => {
+    if (fs.existsSync(path.join(__dirname, 'landing.html'))) {
+        return res.sendFile(path.join(__dirname, 'landing.html'));
+    }
+    next();
+});
