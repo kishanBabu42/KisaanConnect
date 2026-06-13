@@ -84,6 +84,17 @@
         * {
             box-sizing: border-box;
         }
+
+        /* Hide scrollbars globally */
+        ::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        html, body {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
         /* Targeted transitions — don't apply to display:none elements */
         .nav-link, .btn, .card, .stat-card, .control-btn {
             transition: background 0.25s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
