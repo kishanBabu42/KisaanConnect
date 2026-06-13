@@ -599,6 +599,34 @@
         .google-role-option .role-icon { font-size: 28px; margin-bottom: 8px; }
         .google-role-option .role-label { font-size: 13px; font-weight: 700; color: var(--text); }
         .google-role-option .role-sublabel { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* Floating Connection status badge */
+        #server-status-badge {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            z-index: 1000;
+            background: var(--card-bg);
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        #connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            display: inline-block;
+        }
     </style>
 </head>
 <body data-theme="light">
