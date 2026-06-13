@@ -1,7 +1,7 @@
 {
   "name": "kisaan-connect-backend",
   "version": "1.0.0",
-  "homepage": "https://YOUR_USERNAME.github.io/YOUR_REPO",
+  "homepage": "https://dhanunjayroyal.github.io/KisaanConnect",
   "description": "Backend for KisaanConnect app",
   "main": "server.js",
   "engines": {

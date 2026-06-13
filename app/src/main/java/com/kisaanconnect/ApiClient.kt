@@ -1,4 +1,4 @@
-package com.example.kisaanconnect
+package com.kisaanconnect
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

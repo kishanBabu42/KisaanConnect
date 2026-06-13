@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.kisaanconnect'
+    namespace 'com.kisaanconnect'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.example.kisaanconnect"
+        applicationId "com.kisaanconnect"
         minSdk 24
         targetSdk 34
         versionCode 4
