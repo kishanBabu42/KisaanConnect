@@ -1865,6 +1865,34 @@ catch (error) {
         let _googleCredential  = null; // JWT credential from Google
         let _googleUserPayload = null; // Decoded user info
 
+        // ── GOOGLE SIGN-IN FOR ANDROID NATIVE APP ──────────────────────────
+        function handleGoogleSignIn() {
+            if (window.Android && typeof window.Android.launchGoogleSignIn === 'function') {
+                window.Android.launchGoogleSignIn();
+            } else {
+                console.log('[GSI] Running on Web. GSI iframe button handles this.');
+            }
+        }
+
+        // Called by Android Native code on successful sign-in
+        function onNativeGoogleSignInSuccess(user) {
+            console.log('[Android SDK] Google Auth successful:', user);
+            _googleCredential = user.idToken;
+            _googleUserPayload = {
+                name: user.name,
+                email: user.email,
+                picture: user.picture,
+                sub: user.googleId
+            };
+            showGoogleRoleModal(_googleUserPayload);
+        }
+
+        // Called by Android Native code on error
+        function onNativeGoogleSignInError(error) {
+            console.error('[Android SDK] Google Auth failed:', error);
+            alert(error || 'Google Sign-In failed.');
+        }
+
         // Decode JWT payload without a library
         function decodeJwt(token) {
             try {
@@ -1882,6 +1910,11 @@ catch (error) {
         }
 
         function _renderGoogleButton() {
+            // Inside Android WebView, skip standard GSI button rendering to prevent user-agent block
+            if (window.Android && typeof window.Android.launchGoogleSignIn === 'function') {
+                console.log('[GSI] Running inside Android WebView, using native click handler.');
+                return;
+            }
             if (window.google && window.google.accounts) {
                 const btn = document.getElementById('google-signin-btn');
                 if (btn) {
@@ -1956,6 +1989,9 @@ catch (error) {
 
         // Init Google GSI on DOMContentLoaded (faster than 'load') and on 'load' as backup
         function _initGSI() {
+            if (window.Android && typeof window.Android.launchGoogleSignIn === 'function') {
+                return;
+            }
             if (window.google && window.google.accounts) {
                 google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
