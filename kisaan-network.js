@@ -257,11 +257,16 @@
             dot.style.boxShadow   = online
                 ? '0 0 10px #16a34a'
                 : '0 0 8px #ef4444';
+            // Auto-display container if hidden
+            const container = dot.closest('#server-status') || dot.closest('#server-status-badge');
+            if (container) {
+                container.style.display = 'flex';
+            }
         });
         labels.forEach(lbl => {
             lbl.textContent = online
-                ? (ip ? `✓ ${ip}` : '✓ Connected')
-                : '✗ OFFLINE';
+                ? (ip ? `${ip}` : 'Connected')
+                : 'OFFLINE';
         });
     }
 

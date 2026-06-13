@@ -175,6 +175,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            margin-left: -40px;
+            margin-right: -40px;
+            padding: 15px 40px;
+            transition: none;
         }
 
         .user-info {
@@ -790,9 +801,11 @@
 
             /* Header */
             .header {
-                margin-bottom: 16px;
+                margin-left: -14px !important;
+                margin-right: -14px !important;
+                padding: 10px 14px !important;
+                margin-bottom: 15px !important;
             }
-            .header h1 { font-size: 18px; }
 
             /* Market ticker */
             .market-ticker {
@@ -908,17 +921,20 @@
             </div>
         </div>
         <header class="header">
-            <div class="user-info">
-                <div class="avatar" id="user-initials">VK</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <img src="logo.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                 <div>
-                    <h2 style="margin:0; font-size: 1.2rem;" id="user-name">Farmer</h2>
-                    <div id="server-status" style="display:none;">
-                        <span id="connection-dot"></span>
-                        <span>SERVER</span>
-                    </div>
+                    <h1 style="margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--text);">KisaanConnect</h1>
+                    <div id="user-name" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Farmer</div>
+                    <!-- Hidden element to prevent JS reference errors -->
+                    <div id="user-initials" style="display: none;"></div>
                 </div>
             </div>
-            <div class="controls">
+            <div class="controls" style="display: flex; align-items: center; gap: 10px;">
+                <div id="server-status" style="display: flex; align-items: center; gap: 6px; background: var(--card-bg); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--text-muted);">
+                    <span id="connection-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+                    <span id="server-ip-text">Connecting...</span>
+                </div>
                 <div class="control-btn" onclick="window.location.reload()"><i class="fas fa-sync-alt"></i></div>
                 <select id="lang-select" onchange="changeLang(this.value)" style="background: var(--bg); color: var(--primary); border: 1.5px solid var(--primary); border-radius: 12px; padding: 5px 10px; font-weight: 700; font-size: 12px; cursor: pointer; outline: none; box-shadow: var(--shadow);">
                     <option value="en">English</option>
