@@ -23,13 +23,32 @@ jobs:
       - name: Use Node.js (for job steps)
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build
         run: npm run build
+
+      - name: Validate Server Syntax
+        run: node -c server.js
+
+      - name: Start KisaanConnect Server
+        run: node server.js &
+
+      - name: Wait for Server Startup
+        run: sleep 3
+
+      - name: Run E2E Test Runner
+        run: node e2e_tests/test_runner.js
+
+      - name: Upload Excel E2E Report Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-excel-reports
+          path: e2e_tests/reports/
 
       - name: Archive build
         if: success()

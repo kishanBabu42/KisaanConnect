@@ -1,0 +1,101 @@
+Test Case ID,Test Type,Category,Test Description,Status,Analysis & Notes
+TC-001,Selenium,Farmer Auth,Farmer Registration with valid fields,PASS,"Database is fully accessible, user was successfully created."
+TC-002,Selenium,Farmer Auth,Farmer Registration validation on blank fields,PASS,Client-side and server-side mandatory validation verified.
+TC-003,Selenium,Farmer Auth,Farmer Registration with duplicate email address check,PASS,Returns status 400 Bad Request as expected.
+TC-004,Selenium,Farmer Auth,Farmer Login with valid credentials,PASS,Correctly returns user session configuration.
+TC-005,Selenium,Farmer Auth,Farmer Login validation with incorrect password,PASS,Correctly outputs error: Invalid credentials.
+TC-006,Appium,Farmer Auth,Mobile App Login button click and transition,PASS,UiAutomator2 located login button and performed click.
+TC-007,Appium,Farmer Auth,Mobile Login persistence on app restart,PASS,Verified session is persisted in local device storage.
+TC-008,Selenium,Farmer Auth,Farmer Bio and Location coordinates update,PASS,PUT /api/users/:id successfully saves data.
+TC-009,Selenium,Farmer Auth,Farmer Profile image upload via base64 encoding,PASS,Profile pic is compressed to base64 and saved successfully.
+TC-010,Appium,Farmer Auth,Mobile Location update via interactive map coordinate selection,PASS,Verified Leaflet maps registers coordinates inside WebView.
+TC-011,Selenium,Customer Auth,Customer Signup with valid fields,PASS,"Database is fully accessible, customer record created."
+TC-012,Selenium,Customer Auth,Customer Signup with malformed email verification,PASS,Web client validation flags invalid email format.
+TC-013,Selenium,Customer Auth,Customer Login with valid email & password,PASS,Customer dashboard opens and session is registered.
+TC-014,Selenium,Customer Auth,Customer Login role mismatch check (trying to login on Farmer portal),PASS,Fails with role mismatch error code.
+TC-015,Appium,Customer Auth,Customer Mobile App Login transition,PASS,Successfully launches WebView from login screen.
+TC-016,Appium,Customer Auth,Customer login persistence on app task killer exit,PASS,Verified localStorage persists user session.
+TC-017,Selenium,Customer Auth,Customer profile coordinates and address update,PASS,Customer profile details updated successfully in database.
+TC-018,Selenium,Customer Auth,Customer profile photo upload verification,PASS,Profile pic successfully updated.
+TC-019,Appium,Customer Auth,Customer geolocation coordinate auto-lookup on dashboard,PASS,HTML5 Geolocation API returns mock location inside App.
+TC-020,Selenium,Customer Auth,Customer profile logout and session clearance,PASS,Clears sessionStorage and redirects to index.html.
+TC-021,Selenium,Admin Portal,Admin Login using predefined credential settings,PASS,Admin dashboard loaded successfully.
+TC-022,Selenium,Admin Portal,Admin Login rejection with invalid parameters,PASS,Correctly outputs 401 status code.
+TC-023,Selenium,Admin Portal,Admin Statistics dashboard values matching db counts,PASS,Dashboard statistics loaded successfully.
+TC-024,Selenium,Admin Portal,Admin User directory rendering,PASS,Full users list rendered on the page.
+TC-025,Selenium,Admin Portal,Admin User deletion from directory,PASS,"User deleted, database updated."
+TC-026,Selenium,Admin Portal,Admin Product catalog management view list,PASS,Products list matches the active listings.
+TC-027,Selenium,Admin Portal,Admin Customer orders overview tracking list,PASS,Full orders dataset retrieved successfully.
+TC-028,Selenium,Admin Portal,Admin Platform fee summary log listing,PASS,Admin fee statements retrieved successfully.
+TC-029,Selenium,Admin Portal,Admin Global payment details instructions setup,PASS,Payment instructions updated in settings.
+TC-030,Selenium,Admin Portal,Admin User lock/unlock status toggles,PASS,Verified status updates for is_locked user flags.
+TC-031,Selenium,Product Mgmt,Farmer product listing creation with complete metadata,PASS,POST /api/products returns product ID.
+TC-032,Selenium,Product Mgmt,Farmer product creation with empty images fallback,PASS,Applies default unsplash generic farm crop image.
+TC-033,Selenium,Product Mgmt,Farmer product creation with base64 image compression validation,PASS,Image file was resized in canvas and compressed before sending.
+TC-034,Appium,Product Mgmt,Mobile Camera click integration and base64 parsing,PASS,Appium triggered native camera overlay and passed image to WebView.
+TC-035,Selenium,Product Mgmt,Farmer product listing editing and server persistence,PASS,PUT /api/products/:id updates price and quantity.
+TC-036,Selenium,Product Mgmt,"Farmer product marked as ""sold"" from list",PASS,Status code updated to sold in Firestore.
+TC-037,Selenium,Product Mgmt,Farmer active product listing deletion,PASS,Deleted product removed from grid and database.
+TC-038,Selenium,Product Mgmt,Customer product list rendering on login,PASS,Catalog list fetched and loaded in grid.
+TC-039,Selenium,Product Mgmt,Customer product search input lookup,PASS,Filter works instantly on typing.
+TC-040,Selenium,Product Mgmt,Customer product filter by location range,PASS,Correctly matches product farm coordinates.
+TC-041,Selenium,Product Mgmt,Customer product filter by price scale slider,PASS,Hides items exceeding price threshold.
+TC-042,Appium,Product Mgmt,Mobile product detailed modal card layout,PASS,Rendered responsive details view on mobile viewports.
+TC-043,Appium,Product Mgmt,Mobile swipe actions inside product image gallery carousel,PASS,Swipe gestures correctly cycle through pictures.
+TC-044,Selenium,Product Mgmt,Product age counter increment logic validation,PASS,Age display formatted correctly (e.g. 2 days old).
+TC-045,Selenium,Product Mgmt,Product market price comparator rendering,PASS,Indicates margin savings relative to market price.
+TC-046,Selenium,Quotes & Orders,Customer quote offer submission on active product,PASS,POST /api/quotes saves quote successfully.
+TC-047,Selenium,Quotes & Orders,Customer quote submission validation with blank fields,PASS,Returns HTTP status 400 with missing parameters message.
+TC-048,Selenium,Quotes & Orders,Customer quote with logistic driver request enabled,PASS,needDriver flag set to true in Firestore.
+TC-049,Appium,Quotes & Orders,Mobile socket.io push alert on receiving new customer quote,PASS,Socket.io triggers native mobile toast alert.
+TC-050,Selenium,Quotes & Orders,Farmer dashboard quote list refresh,PASS,Pending quotes fetched and listed.
+TC-051,Selenium,Quotes & Orders,Farmer quote acceptance and order conversion,PASS,Accepting quote triggers auto-generation of order.
+TC-052,Selenium,Quotes & Orders,Farmer quote rejection updates status,PASS,"Quote status updated to ""no""."
+TC-053,Appium,Quotes & Orders,Customer mobile app updates on quote state changes,PASS,Real-time HTML UI refresh upon socket event.
+TC-054,Selenium,Quotes & Orders,Quote negotiation custom counter-offer price checks,PASS,Verified offer prices updates logic.
+TC-055,Selenium,Quotes & Orders,Quote self-delivery routing configurations,PASS,Maps self-delivery logic to order logistics type.
+TC-056,Selenium,Quotes & Orders,Quote delivery partner assignment broadcast,PASS,Logs driver request broadcast on socket server.
+TC-057,Selenium,Quotes & Orders,Quote accepted order data validation checks,PASS,Order details successfully matches quote quantities.
+TC-058,Appium,Quotes & Orders,Mobile WebSocket connection resilience tests,PASS,Socket.io successfully auto-reconnects on network recovery.
+TC-059,Selenium,Quotes & Orders,Quote status list database query filters,PASS,Filters only user relevant quote items.
+TC-060,Selenium,Quotes & Orders,Quote price totals calculations check,PASS,Matches offerPrice multiplied by quantity.
+TC-061,Selenium,Subscriptions,Customer subscription setup for weekly delivery,PASS,Subscription saved under active status.
+TC-062,Selenium,Subscriptions,Customer active subscriptions overview panel check,PASS,List loaded successfully.
+TC-063,Selenium,Subscriptions,Farmer weekly subscription list details retrieval,PASS,Farmer subscription requests loads.
+TC-064,Selenium,Subscriptions,Farmer subscription approval confirmation,PASS,Status successfully changed to approved.
+TC-065,Selenium,Subscriptions,Farmer subscription rejection with remarks entry,PASS,Status changed to rejected with notes.
+TC-066,Appium,Subscriptions,Mobile push event on subscription updates,PASS,Mobile alert triggers successfully.
+TC-067,Selenium,Subscriptions,Customer subscription cancellation,PASS,Subscription deleted from database.
+TC-068,Selenium,Subscriptions,Subscription database deletions cache clearing,PASS,In-memory TTL cache successfully cleared.
+TC-069,Selenium,Subscriptions,Subscription day of week delivery scheduling options,PASS,Validates week day schedule strings.
+TC-070,Appium,Subscriptions,Mobile calendar planner subscription highlights,PASS,Highlighted active delivery dates on calendar.
+TC-071,Selenium,Payments,Farmer UPI configurations form checks,PASS,UPI details update saved to profile.
+TC-072,Selenium,Payments,Farmer Bank account structure validation,PASS,IFSC code validation conforms to rules.
+TC-073,Selenium,Payments,Customer wallet payment processing,PASS,Transaction completes with status 200.
+TC-074,Selenium,Payments,Wallet balance validator on insufficient amount,PASS,Payment blocked and returns error.
+TC-075,Selenium,Payments,Wallet debit transactions updates checks,PASS,Wallet balance correctly deducted.
+TC-076,Selenium,Payments,Wallet credit transactions updates checks,PASS,Wallet balance correctly credited.
+TC-077,Selenium,Payments,Payment transaction histories logger validation,PASS,Recorded transactions details in DB.
+TC-078,Selenium,Payments,Payment transaction lists retrieval,PASS,Enriched payment records loaded.
+TC-079,Appium,Payments,Mobile UPI QR code dialog rendering,PASS,UPI QR code dialog displays nicely.
+TC-080,Selenium,Payments,Platform fee calculation logic checks,PASS,"Verified rates: 3% customer, 1.72% farmer."
+TC-081,Selenium,Work Planner,Calendar note creation,PASS,Notes upserted successfully.
+TC-082,Selenium,Work Planner,Calendar notes retrieval,PASS,Notes map returned successfully.
+TC-083,Selenium,Work Planner,Calendar scheduler date highlight rendering,PASS,Highlighted note dates inside grid.
+TC-084,Selenium,Work Planner,Calendar note deletion and UI updates,PASS,Note removed from DB.
+TC-085,Appium,Work Planner,Mobile calendar month transition swipes,PASS,Swiped to switch months.
+TC-086,Selenium,Community,Community message post creation,PASS,Message saved to community collection.
+TC-087,Selenium,Community,Community feed list retrieval sorting checks,PASS,Feed items returned in order.
+TC-088,Selenium,Community,Liking community post increment logic,PASS,Post likes count updated in DB.
+TC-089,Appium,Community,Mobile community infinite scrolling performance,PASS,Smooth scroll transitions.
+TC-090,Selenium,Community,Community board post formatting checks,PASS,Escaped HTML entities successfully.
+TC-091,Selenium,AI & Scan,AI Chat message routing,PASS,Chatbot reply returned successfully.
+TC-092,Selenium,AI & Scan,AI Chat local fallback database triggers,PASS,Offline response triggered correctly.
+TC-093,Selenium,AI & Scan,AI Chat role-based system prompts configuration,PASS,Verified prompts structure.
+TC-094,Selenium,AI & Scan,AI Chat response language localization,PASS,Replied in matched query language.
+TC-095,Appium,AI & Scan,Mobile Disease scanner file uploads selector,PASS,Android file chooser dialog loads.
+TC-096,Appium,AI & Scan,Mobile image upload endpoint handler,PASS,File processed and saved in uploads folder.
+TC-097,Selenium,AI & Scan,Diagnostic scanner output remedies render,PASS,Displays chemical & organic treatments.
+TC-098,Selenium,AI & Scan,Scanner fallback keywords regex checks,PASS,Keywords matched local knowledge base.
+TC-099,Appium,AI & Scan,Mobile scanner offline detection warning alerts,PASS,Alert banner displays correctly.
+TC-100,Selenium,AI & Scan,AI Chat session history cleanup checks,PASS,History sliced to stay under size limits.

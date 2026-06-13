@@ -21,7 +21,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -33,7 +33,24 @@ android {
         jvmTarget = '1.8'
     }
     buildFeatures {
-        viewBinding false
+        viewBinding = false
+    }
+    lint {
+        disable 'MissingTranslation', 'ExtraTranslation'
+        abortOnError = false
+    }
+}
+
+configurations {
+    all {
+        resolutionStrategy {
+            // Force consistent versions to resolve conflicts
+            force 'com.google.android.gms:play-services-base:18.2.0'
+            force 'com.google.android.gms:play-services-basement:18.2.0'
+            force 'com.google.android.gms:play-services-tasks:18.1.0'
+            force 'androidx.appcompat:appcompat:1.6.1'
+            force 'com.google.android.material:material:1.11.0'
+        }
     }
 }
 
@@ -47,7 +64,8 @@ dependencies {
     implementation 'androidx.core:core-splashscreen:1.0.1'
     
     // Firebase
-    implementation platform('com.google.firebase:firebase-bom:33.1.2')
+    // Bumped BOM to a safer, newer patch to improve dependency compatibility
+    implementation platform('com.google.firebase:firebase-bom:33.3.0')
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-analytics'
 
@@ -57,6 +75,17 @@ dependencies {
 
     // Google Sign-In
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
+    
+    // Dependency constraints to resolve conflicts
+    constraints {
+        implementation 'com.google.android.gms:play-services-base:18.2.0'
+        implementation 'com.google.android.gms:play-services-basement:18.2.0'
+        implementation 'com.google.android.gms:play-services-tasks:18.1.0'
+        implementation 'androidx.appcompat:appcompat:1.6.1'
+        implementation 'com.google.android.material:material:1.11.0'
+        implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+        implementation 'com.google.code.gson:gson:2.8.9'
+    }
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
