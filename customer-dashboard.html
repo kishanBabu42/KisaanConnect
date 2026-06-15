@@ -481,23 +481,171 @@
             word-break: break-word;
         }
 
+        /* SIDEBAR (Desktop) */
+        .sidebar {
+            width: 260px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .sidebar .logo {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--primary);
+        }
+
+        /* Adjust Layout for Desktop */
+        body {
+            display: flex;
+            min-height: 100vh;
+            padding-bottom: 0;
+        }
+        .container {
+            flex: 1;
+            margin-left: 260px !important;
+            padding: 30px !important;
+            max-width: calc(100% - 260px) !important;
+        }
+        .glass-header {
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+        
+        .tab-bar {
+            display: none;
+        }
+        .drawer-backdrop {
+            display: none;
+        }
+
+        /* MOBILE OVERRIDES */
         @media (max-width: 768px) {
-            [data-hidden-mobile] {
-                display: none !important;
+            body {
+                flex-direction: column;
+                padding-bottom: 80px !important;
             }
-            .mobile-more-btn {
+            .sidebar {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                bottom: 0 !important;
+                width: 280px !important;
+                height: 100vh !important;
+                z-index: 10001 !important;
+                flex-direction: column !important;
+                background: var(--card-bg) !important;
+                box-shadow: 4px 0 24px rgba(0,0,0,0.15) !important;
+                transform: translateX(-100%) !important;
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                padding: 24px 16px !important;
+                display: flex !important;
+                justify-content: flex-start !important;
+                overflow-y: auto !important;
+                border-right: 1px solid var(--border) !important;
+            }
+            .sidebar.drawer-open {
+                transform: translateX(0) !important;
+            }
+            .container {
+                margin-left: 0 !important;
+                padding: 15px !important;
+                max-width: 100% !important;
+            }
+            .glass-header {
+                margin-left: -15px !important;
+                margin-right: -15px !important;
+                padding: 10px 15px !important;
+            }
+            .menu-toggle-btn {
                 display: flex !important;
             }
+            .drawer-backdrop.active {
+                display: block !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.4);
+                backdrop-filter: blur(4px);
+                z-index: 10000;
+            }
             .tab-bar {
+                display: flex !important;
                 height: 60px !important;
                 padding: 4px 6px !important;
                 background: var(--card-bg) !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 9999;
+                border-top: 1px solid var(--border);
+                justify-content: center;
+                align-items: center;
+                box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
             }
             .tab-btn {
-                padding: 6px 10px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 4px !important;
+                padding: 8px 24px !important;
+                color: var(--text-muted) !important;
+                text-decoration: none !important;
+                font-size: 11px !important;
+                font-weight: 700 !important;
+                cursor: pointer !important;
+                border-radius: 12px !important;
+                background: transparent !important;
+                border: none !important;
+                transition: all 0.2s !important;
+            }
+            .tab-btn.active {
+                color: var(--primary) !important;
+                background: rgba(5, 150, 105, 0.1) !important;
             }
             .tab-btn i {
-                font-size: 18px !important;
+                font-size: 20px !important;
             }
         }
 
@@ -652,27 +800,52 @@
 </head>
 
 <body data-theme="light">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="logo" style="display: flex; align-items: center; gap: 10px; padding-bottom: 20px;">
+            <img src="logo.png" alt="Logo" style="width: 35px; height: 35px; border-radius: 8px;">
+            <div style="font-size: 20px; font-weight: 800; color: var(--primary);">KisaanConnect</div>
+        </div>
+        <a class="nav-link active" onclick="switchSection('market')"><i class="fas fa-shopping-basket"></i> <span>Shop</span></a>
+        <a class="nav-link" onclick="switchSection('orders')"><i class="fas fa-clipboard-list"></i> <span>My Orders</span></a>
+        <a class="nav-link" onclick="switchSection('wishlist')"><i class="fas fa-heart"></i> <span>Wishlist</span></a>
+        <a class="nav-link" onclick="switchSection('community')"><i class="fas fa-users"></i> <span>Community Board</span></a>
+        <a class="nav-link" onclick="switchSection('subs')"><i class="fas fa-sync-alt"></i> <span>Weekly Subscriptions</span></a>
+        <a class="nav-link" onclick="switchSection('calendar')"><i class="fas fa-calendar-alt"></i> <span>Planner</span></a>
+        <a class="nav-link" onclick="switchSection('payments')"><i class="fas fa-wallet"></i> <span>Payments</span></a>
+        <a class="nav-link" onclick="switchSection('profile')"><i class="fas fa-user-circle"></i> <span>My Profile</span></a>
+        <a class="nav-link" onclick="shareApp()" style="margin-top: 15px; border: 1.5px dashed var(--primary);"><i class="fas fa-share-nodes" style="color:var(--primary)"></i> <span style="font-weight: 700; color:var(--primary)">Share App</span></a>
+    </nav>
     <!-- HEADER -->
     <header class="glass-header">
         <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="logo.png" alt="Logo" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <!-- 4-line Drawer Menu Button (Mobile only) -->
+            <button class="menu-toggle-btn control-btn" onclick="toggleDrawer()" style="display: none; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--text); padding: 0; width: 32px; height: 32px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="4" y1="5" x2="20" y2="5" />
+                    <line x1="4" y1="10" x2="20" y2="10" />
+                    <line x1="4" y1="15" x2="20" y2="15" />
+                    <line x1="4" y1="20" x2="20" y2="20" />
+                </svg>
+            </button>
             <div>
-                <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.5px;">KisaanConnect</h1>
-                <div id="user-name-header"
-                    style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
-                    Loading...</div>
+                <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text);">KisaanConnect</h1>
+                <!-- Hidden elements for JS compatibility -->
+                <img src="logo.png" alt="Logo" style="display: none !important;">
+                <div id="user-name-header" style="display: none !important;">Loading...</div>
             </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div id="server-status" style="display: flex; align-items: center; gap: 6px; background: var(--card-bg); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--text-muted);">
-                <span id="connection-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
-                <span id="server-ip-text">Connecting...</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <!-- Hidden elements for JS compatibility -->
+            <div id="server-status" style="display: none !important;">
+                <span id="connection-dot"></span>
+                <span id="server-ip-text"></span>
             </div>
-            <!-- Wallet removed per user request -->
-            <div class="control-btn" onclick="shareApp()" title="Share App"
-                style="width: 45px; height: 45px; background: rgba(5, 150, 105, 0.1); color: var(--primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid rgba(5, 150, 105, 0.25);">
-                <i class="fas fa-share-nodes"></i></div>
-            <div class="control-btn" onclick="toggleTheme()"
+            <!-- Visible header controls -->
+            <div class="control-btn" onclick="window.location.reload()" title="Refresh"
+                style="width: 45px; height: 45px; background: var(--card-bg); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border);">
+                <i class="fas fa-sync-alt"></i></div>
+            <div class="control-btn" onclick="toggleTheme()" title="Theme Toggle"
                 style="width: 45px; height: 45px; background: var(--card-bg); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border);">
                 <i class="fas fa-moon" id="theme-icon"></i></div>
         </div>
@@ -1288,16 +1461,6 @@
     <nav class="tab-bar">
         <a class="tab-btn active" onclick="switchSection('market')"><i
                 class="fas fa-shopping-basket"></i><span>Shop</span></a>
-        <a class="tab-btn" onclick="switchSection('orders')"><i
-                class="fas fa-clipboard-list"></i><span>Orders</span></a>
-        <a class="tab-btn" onclick="switchSection('wishlist')"><i class="fas fa-heart"></i><span>Wishlist</span></a>
-        <a class="tab-btn" onclick="switchSection('community')" data-hidden-mobile><i class="fas fa-users"></i><span>Board</span></a>
-        <a class="tab-btn" onclick="switchSection('subs')" data-hidden-mobile><i class="fas fa-sync-alt"></i><span>Subs</span></a>
-        <a class="tab-btn" onclick="switchSection('calendar')" data-hidden-mobile><i
-                class="fas fa-calendar-alt"></i><span>Planner</span></a>
-        <a class="tab-btn" onclick="switchSection('payments')" data-hidden-mobile><i class="fas fa-wallet"></i><span>Payments</span></a>
-        <a class="tab-btn" onclick="switchSection('profile')"><i class="fas fa-user-circle"></i><span>Profile</span></a>
-        <a class="tab-btn mobile-more-btn" onclick="openMoreSheet()"><i class="fas fa-ellipsis-h"></i><span>More</span></a>
     </nav>
 
     <!-- QUOTE MODAL -->
@@ -1650,26 +1813,23 @@
             const hero = document.getElementById('hero-section');
             if (hero) hero.style.display = (id === 'market') ? 'block' : 'none';
 
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-            // Fix: find the correct button to activate
-            const btns = document.querySelectorAll('.tab-btn');
-            let activated = false;
-            btns.forEach(btn => {
-                if (btn.onclick && btn.onclick.toString().includes(id)) {
-                    if (window.getComputedStyle(btn).display !== 'none') {
-                        btn.classList.add('active');
-                        activated = true;
-                    }
-                }
-            });
-            if (!activated) {
-                // If it is hidden in mobile view, highlight the More button instead
-                const moreBtn = document.querySelector('.mobile-more-btn');
-                if (moreBtn && window.innerWidth <= 768) {
-                    moreBtn.classList.add('active');
+            // Update bottom tab active state (Shop is home)
+            const bottomHomeBtn = document.querySelector('.tab-bar .tab-btn');
+            if (bottomHomeBtn) {
+                if (id === 'market') {
+                    bottomHomeBtn.classList.add('active');
+                } else {
+                    bottomHomeBtn.classList.remove('active');
                 }
             }
+
+            // Update active state in sidebar
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(id)) {
+                    link.classList.add('active');
+                }
+            });
 
             if (id === 'profile') loadProfile();
             if (id === 'payments') loadCustomerPayments();
@@ -1681,6 +1841,9 @@
                     .then(data => { subscriptions = data; renderSubs(); })
                     .catch(() => renderSubs());
             }
+
+            // Close mobile drawer if open
+            closeDrawer();
         }
 
         function filterProducts() {
@@ -2903,7 +3066,24 @@
             closeMoreSheet();
             switchSection(sectionId);
         }
+
+        function toggleDrawer() {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.drawer-backdrop');
+            if (sidebar) sidebar.classList.toggle('drawer-open');
+            if (backdrop) backdrop.classList.toggle('active');
+        }
+
+        function closeDrawer() {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.drawer-backdrop');
+            if (sidebar) sidebar.classList.remove('drawer-open');
+            if (backdrop) backdrop.classList.remove('active');
+        }
     </script>
+
+    <!-- Drawer Backdrop (Mobile only) -->
+    <div class="drawer-backdrop" onclick="closeDrawer()"></div>
 
     <!-- Beautiful Bottom Sheet for Mobile "More" Menu -->
     <div id="mobile-more-sheet" class="more-sheet-overlay" onclick="closeMoreSheet(event)">
