@@ -4,7 +4,40 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'app/**'
+      - 'gradle/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'gradle.properties'
+      - 'local.properties'
+      - '*.md'
+      - '.gitignore'
+      - '.vercelignore'
+      - '.vscode/**'
+      - '.idea/**'
+      - 'scratch/**'
+      - 'uploads/**'
   pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - 'app/**'
+      - 'gradle/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'gradle.properties'
+      - 'local.properties'
+      - '*.md'
+      - '.gitignore'
+      - '.vercelignore'
+      - '.vscode/**'
+      - '.idea/**'
+      - 'scratch/**'
+      - 'uploads/**'
 
 permissions:
   contents: write
