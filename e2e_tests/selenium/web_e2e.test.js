@@ -165,7 +165,10 @@ async function s2_FarmerAuth() {
         
         // Click Create Account
         await click('auth-btn');
-        await driver.sleep(3000);
+        try {
+            await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Account created')]")), WAIT);
+        } catch (_) {}
+        await driver.sleep(1000);
         
         const s = await src();
         return !s.includes('Uncaught') && !s.includes('ReferenceError');
@@ -333,7 +336,10 @@ async function s4_CustomerAuth() {
         
         // Click Create Account
         await click('auth-btn');
-        await driver.sleep(3000);
+        try {
+            await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Account created')]")), WAIT);
+        } catch (_) {}
+        await driver.sleep(1000);
         
         const s = await src();
         return !s.includes('Uncaught') && !s.includes('ReferenceError');
