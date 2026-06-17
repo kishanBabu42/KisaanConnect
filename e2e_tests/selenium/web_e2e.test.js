@@ -11,17 +11,41 @@
 
 'use strict';
 
+/* ╔══════════════════════════════════════════╗
+ * ║       USER CONFIG — EDIT HERE            ║
+ * ╚══════════════════════════════════════════╝ */
+const USER_CONFIG = {
+    BASE_URL:  process.env.BASE_URL || 'http://localhost:3000',
+    // Test farmer credentials (will be auto-registered)
+    FARMER_NAME:    'Selenium Farmer',
+    FARMER_MOBILE:  '9876543210',
+    FARMER_LOCATION:'Punjab Farms',
+    // Test customer credentials (will be auto-registered)
+    CUSTOMER_NAME:    'Selenium Customer',
+    CUSTOMER_MOBILE:  '8765432109',
+    CUSTOMER_LOCATION:'Mumbai',
+    // Shared test password
+    TEST_PASSWORD: 'Test@12345',
+    // Admin credentials
+    ADMIN_EMAIL:    'admin@kisaanconnect.com',
+    ADMIN_PASSWORD: 'admin123',
+    // Browser wait timeout (ms)
+    TIMEOUT: 8000,
+};
+/* ─────────────────────────────────────────── */
+
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const fs     = require('fs');
 const path   = require('path');
 
-const BASE    = process.env.BASE_URL || 'http://localhost:3000';
-const WAIT    = 8000;
+const BASE    = USER_CONFIG.BASE_URL;
+const WAIT    = USER_CONFIG.TIMEOUT;
 const TS      = Date.now();
 const F_EMAIL = `sel_farmer_${TS}@test.com`;
 const C_EMAIL = `sel_cust_${TS}@test.com`;
-const PASS    = 'Test@12345';
+const PASS    = USER_CONFIG.TEST_PASSWORD;
+
 
 let driver;
 const results = [];

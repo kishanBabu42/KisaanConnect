@@ -1,4 +1,4 @@
-name: KisaanConnect E2E Tests
+name: KisaanConnect — Full E2E Test Suite (170 Cases)
 
 on:
   workflow_dispatch:
@@ -14,78 +14,67 @@ on:
       - 'uploads/**'
   pull_request:
     branches: [ main ]
-    paths-ignore:
-      - 'app/**'
-      - 'gradle/**'
-      - '*.md'
-      - '.gitignore'
 
 permissions:
   contents: write
   pages: write
   id-token: write
 
-# ─────────────────────────────────────────────────────────────
-# JOB 1 — Selenium Web Tests (Real Headless Chrome)
-# Runs 50 real browser tests against the live local server
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────
+# SHARED server startup steps (reused across jobs via composite)
+# Each job independently starts the server since jobs run in
+# separate VMs on GitHub Actions.
+# ─────────────────────────────────────────────────────────────────
+
 jobs:
+
+# ══════════════════════════════════════════════════════════════════
+# JOB 1 — Selenium Web Tests (50 cases) — Real Headless Chrome
+# ══════════════════════════════════════════════════════════════════
   selenium-web-tests:
-    name: "🌐 Selenium — Website Tests (50 cases)"
+    name: "🌐 Selenium — Website UI/Functional Tests (50)"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Node Dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Install Selenium WebDriver
+      - name: Install Selenium + ChromeDriver
         run: npm install selenium-webdriver chromedriver --no-save
 
-      - name: Setup Chrome & ChromeDriver
-        uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: stable
 
-      - name: Create .env for CI
+      - name: Create CI .env
         run: |
-          echo "FIREBASE_PROJECT_ID=kisaanconnect-test" >> .env
           echo "NODE_ENV=test" >> .env
           echo "PORT=3000" >> .env
+          echo "FIREBASE_PROJECT_ID=kisaanconnect-ci" >> .env
 
-      - name: Start KisaanConnect Server
+      - name: Start Server
         run: node server.js &
-        env:
-          NODE_ENV: test
-          PORT: 3000
 
-      - name: Wait for Server to be Ready
+      - name: Wait for server ready
         run: |
-          echo "Waiting for server on port 3000..."
-          for i in $(seq 1 15); do
-            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
-              echo "✅ Server is ready!"
-              break
-            fi
-            echo "  Attempt $i/15 — waiting..."
-            sleep 2
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:3000/api/health && echo "✅ Ready" && break
+            echo "Waiting... ($i/20)"; sleep 3
           done
 
-      - name: Run Selenium Web Tests (50 cases)
+      - name: Run Selenium Web Tests
         env:
           BASE_URL: http://localhost:3000
           GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
         run: node e2e_tests/selenium/web_e2e.test.js
 
-      - name: Upload Selenium Report CSV
+      - name: Upload Selenium Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -93,60 +82,47 @@ jobs:
           path: e2e_tests/reports/Selenium_Report.csv
           retention-days: 30
 
-# ─────────────────────────────────────────────────────────────
-# JOB 2 — Appium Android Tests (Structured CI Validation)
-# Runs 50 Android test cases with backend health probes.
-# Real device testing requires APPIUM_REAL=1 + physical runner.
-# ─────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════
+# JOB 2 — Appium Android Tests (50 cases) — CI Validation Mode
+# ══════════════════════════════════════════════════════════════════
   appium-android-tests:
-    name: "📱 Appium — Android App Tests (50 cases)"
+    name: "📱 Appium — Android App Tests (50)"
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Node Dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Create .env for CI
+      - name: Create CI .env
         run: |
-          echo "FIREBASE_PROJECT_ID=kisaanconnect-test" >> .env
           echo "NODE_ENV=test" >> .env
           echo "PORT=3000" >> .env
+          echo "FIREBASE_PROJECT_ID=kisaanconnect-ci" >> .env
 
-      - name: Start KisaanConnect Server
+      - name: Start Server
         run: node server.js &
-        env:
-          NODE_ENV: test
-          PORT: 3000
 
-      - name: Wait for Server to be Ready
+      - name: Wait for server ready
         run: |
-          echo "Waiting for server on port 3000..."
-          for i in $(seq 1 15); do
-            if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
-              echo "✅ Server is ready!"
-              break
-            fi
-            echo "  Attempt $i/15 — waiting..."
-            sleep 2
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:3000/api/health && echo "✅ Ready" && break
+            echo "Waiting... ($i/20)"; sleep 3
           done
 
-      - name: Run Appium Android Tests (50 cases)
+      - name: Run Appium Android Tests
         env:
           BASE_URL: http://localhost:3000
+          # APPIUM_REAL: '1'   ← Uncomment + add self-hosted runner with device
           GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
-          # APPIUM_REAL=1 only when real Appium server + device attached
         run: node e2e_tests/appium/mobile_e2e.test.js
 
-      - name: Upload Appium Report CSV
+      - name: Upload Appium Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -154,29 +130,170 @@ jobs:
           path: e2e_tests/reports/Appium_Report.csv
           retention-days: 30
 
-# ─────────────────────────────────────────────────────────────
-# JOB 3 — Merge Reports & Deploy to GitHub Pages
-# ─────────────────────────────────────────────────────────────
-  compile-and-deploy:
-    name: "📊 Compile Reports & Deploy"
+# ══════════════════════════════════════════════════════════════════
+# JOB 3 — Unit Tests (30 cases) — API Level
+# ══════════════════════════════════════════════════════════════════
+  unit-tests:
+    name: "🔬 Unit Tests — API Endpoints (30)"
     runs-on: ubuntu-latest
-    needs: [selenium-web-tests, appium-android-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create CI .env
+        run: |
+          echo "NODE_ENV=test" >> .env
+          echo "PORT=3000" >> .env
+          echo "FIREBASE_PROJECT_ID=kisaanconnect-ci" >> .env
+
+      - name: Start Server
+        run: node server.js &
+
+      - name: Wait for server ready
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:3000/api/health && echo "✅ Ready" && break
+            echo "Waiting... ($i/20)"; sleep 3
+          done
+
+      - name: Run Unit Tests
+        env:
+          GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
+        run: node e2e_tests/unit/unit_tests.js
+
+      - name: Upload Unit Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: e2e_tests/reports/Unit_Report.csv
+          retention-days: 30
+
+# ══════════════════════════════════════════════════════════════════
+# JOB 4 — Validation Tests (25 cases) — Input & Boundary
+# ══════════════════════════════════════════════════════════════════
+  validation-tests:
+    name: "✅ Validation Tests — Input & Boundary (25)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create CI .env
+        run: |
+          echo "NODE_ENV=test" >> .env
+          echo "PORT=3000" >> .env
+          echo "FIREBASE_PROJECT_ID=kisaanconnect-ci" >> .env
+
+      - name: Start Server
+        run: node server.js &
+
+      - name: Wait for server ready
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:3000/api/health && echo "✅ Ready" && break
+            echo "Waiting... ($i/20)"; sleep 3
+          done
+
+      - name: Run Validation Tests
+        env:
+          GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
+        run: node e2e_tests/validation/validation_tests.js
+
+      - name: Upload Validation Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-test-report
+          path: e2e_tests/reports/Validation_Report.csv
+          retention-days: 30
+
+# ══════════════════════════════════════════════════════════════════
+# JOB 5 — Deployment Status Tests (15 cases)
+# ══════════════════════════════════════════════════════════════════
+  deployment-tests:
+    name: "🚀 Deployment Status Tests (15)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create CI .env
+        run: |
+          echo "NODE_ENV=test" >> .env
+          echo "PORT=3000" >> .env
+          echo "FIREBASE_PROJECT_ID=kisaanconnect-ci" >> .env
+
+      - name: Build dist for deployment check
+        run: npm run build
+
+      - name: Start Server
+        run: node server.js &
+
+      - name: Wait for server ready
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:3000/api/health && echo "✅ Ready" && break
+            echo "Waiting... ($i/20)"; sleep 3
+          done
+
+      - name: Run Deployment Status Tests
+        env:
+          RENDER_URL: ${{ secrets.RENDER_URL }}
+          VERCEL_URL: ${{ secrets.VERCEL_URL }}
+          GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
+        run: node e2e_tests/deployment/deployment_status.js
+
+      - name: Upload Deployment Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-test-report
+          path: e2e_tests/reports/Deployment_Report.csv
+          retention-days: 30
+
+# ══════════════════════════════════════════════════════════════════
+# JOB 6 — Compile All Reports → HTML Dashboard → GitHub Pages
+# ══════════════════════════════════════════════════════════════════
+  compile-and-deploy:
+    name: "📊 Compile All Reports & Deploy Dashboard"
+    runs-on: ubuntu-latest
+    needs: [selenium-web-tests, appium-android-tests, unit-tests, validation-tests, deployment-tests]
     if: always()
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Node Dependencies
+      - name: Install dependencies
         run: npm ci
 
       - name: Download Selenium Report
@@ -193,30 +310,52 @@ jobs:
           path: e2e_tests/reports/
         continue-on-error: true
 
-      - name: Merge CSV Reports
+      - name: Download Unit Report
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-report
+          path: e2e_tests/reports/
+        continue-on-error: true
+
+      - name: Download Validation Report
+        uses: actions/download-artifact@v4
+        with:
+          name: validation-test-report
+          path: e2e_tests/reports/
+        continue-on-error: true
+
+      - name: Download Deployment Report
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-test-report
+          path: e2e_tests/reports/
+        continue-on-error: true
+
+      - name: Compile Master Report (CSV + HTML)
+        env:
+          GITHUB_STEP_SUMMARY: ${{ env.GITHUB_STEP_SUMMARY }}
         run: node e2e_tests/test_runner.js
 
-      - name: Build Frontend (dist)
+      - name: Build Frontend
         run: npm run build
 
-      - name: Copy E2E Reports to dist
+      - name: Copy reports to dist
         run: |
+          cp e2e_tests/reports/E2E_Test_Report.html dist/test-report.html 2>/dev/null || true
           cp e2e_tests/reports/E2E_Test_Report.csv dist/ 2>/dev/null || true
-          cp e2e_tests/reports/Selenium_Report.csv dist/ 2>/dev/null || true
-          cp e2e_tests/reports/Appium_Report.csv dist/ 2>/dev/null || true
 
       - name: Upload Combined Report Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-combined-report
-          path: e2e_tests/reports/E2E_Test_Report.csv
+          name: full-e2e-report
+          path: |
+            e2e_tests/reports/E2E_Test_Report.html
+            e2e_tests/reports/E2E_Test_Report.csv
           retention-days: 30
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v5
 
-      - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
