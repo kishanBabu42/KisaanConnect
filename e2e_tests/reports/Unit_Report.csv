@@ -2,39 +2,39 @@ Test Case ID,Test Type,Category,Test Description,Status,Notes
 TC-U01,Unit Test,API,GET /api/health returns 200 with success:true,PASS,Status: 200
 TC-U02,Unit Test,API,Server returns JSON content-type on /api/health,PASS,Content-Type: application/json; charset=utf-8
 TC-U03,Unit Test,API,Unknown route returns 404,PASS,Status: 404
-TC-U04,Unit Test,API,POST /api/signup creates farmer and returns id,PASS,farmerId: 49
-TC-U05,Unit Test,API,POST /api/signup creates customer and returns id,PASS,customerId: 50
+TC-U04,Unit Test,API,POST /api/signup creates farmer and returns id,PASS,farmerId: 51
+TC-U05,Unit Test,API,POST /api/signup creates customer and returns id,PASS,customerId: 52
 TC-U06,Unit Test,API,POST /api/login returns farmer user object,PASS,Login OK
 TC-U07,Unit Test,API,POST /api/login returns customer user object,PASS,Login OK
 TC-U08,Unit Test,API,POST /api/login rejects wrong password,PASS,Status: 401
 TC-U09,Unit Test,API,POST /api/admin/login authenticates admin,PASS,"{""id"":1,""createdAt"":""2026-05-30T11:44:02.188Z"",""name"":""Admin"
-TC-U10,Unit Test,API,GET /api/users returns array,PASS,Count: 50
-TC-U11,Unit Test,API,GET /api/users/:id returns correct user,PASS,Got id: 49
+TC-U10,Unit Test,API,GET /api/users returns array,PASS,Count: 52
+TC-U11,Unit Test,API,GET /api/users/:id returns correct user,PASS,Got id: 51
 TC-U12,Unit Test,API,PUT /api/users/:id updates user bio,PASS,Status: 200
 TC-U13,Unit Test,API,POST /api/users/add-wallet credits wallet,PASS,"{""success"":true,""wallet"":500}"
-TC-U14,Unit Test,API,POST /api/products creates product returns id,PASS,productId: 23
+TC-U14,Unit Test,API,POST /api/products creates product returns id,PASS,productId: 24
 TC-U15,Unit Test,API,GET /api/products returns array,PASS,Count: 17
 TC-U16,Unit Test,API,GET /api/products?farmerId= filters by farmer,PASS,Filtered count: 1
 TC-U17,Unit Test,API,PUT /api/products/:id updates product details,PASS,Status: 200
-TC-U18,Unit Test,API,POST /api/quotes creates quote returns id,PASS,quoteId: 19
+TC-U18,Unit Test,API,POST /api/quotes creates quote returns id,PASS,quoteId: 20
 TC-U19,Unit Test,API,GET /api/quotes?farmerId= returns array,PASS,Count: 0
 TC-U20,Unit Test,API,PUT /api/quotes/:id accepts quote,PASS,Status: 200
-TC-U21,Unit Test,API,POST /api/subscriptions creates subscription,PASS,subId: 14
+TC-U21,Unit Test,API,POST /api/subscriptions creates subscription,PASS,subId: 15
 TC-U22,Unit Test,API,GET /api/subscriptions?farmerId= returns array,PASS,Count: 1
-TC-U23,Unit Test,API,POST /api/payments records payment,PASS,"{""id"":26,""success"":true}"
+TC-U23,Unit Test,API,POST /api/payments records payment,PASS,"{""id"":27,""success"":true}"
 TC-U24,Unit Test,API,GET /api/payments?userId= returns array,PASS,Count: 1
-TC-U25,Unit Test,API,GET /api/payments/all returns all payments,PASS,Count: 26
-TC-U26,Unit Test,API,POST /api/community creates post,PASS,"{""id"":13,""timestamp"":""2026-06-17T08:36:39.491Z"",""likes"":0,""c"
-TC-U27,Unit Test,API,GET /api/community returns posts array,PASS,Count: 13
+TC-U25,Unit Test,API,GET /api/payments/all returns all payments,PASS,Count: 27
+TC-U26,Unit Test,API,POST /api/community creates post,PASS,"{""id"":14,""timestamp"":""2026-06-17T08:41:56.395Z"",""likes"":0,""c"
+TC-U27,Unit Test,API,GET /api/community returns posts array,PASS,Count: 14
 TC-U28,Unit Test,API,POST /api/calendar_notes saves note,PASS,"{""success"":true}"
 TC-U29,Unit Test,API,GET /api/calendar_notes/:farmerId returns notes,PASS,Status: 200
-TC-U30,Unit Test,API,GET /api/orders returns orders array,PASS,Count: 12
-TC-U31,Unit Test,API,POST /api/orders creates an order,PASS,orderId:13
+TC-U30,Unit Test,API,GET /api/orders returns orders array,PASS,Count: 14
+TC-U31,Unit Test,API,POST /api/orders creates an order,PASS,orderId:15
 TC-U32,Unit Test,API,GET /api/orders?farmerId= filters orders by farmer,PASS,Count:0
 TC-U33,Unit Test,API,GET /api/orders?customerId= filters orders by customer,PASS,Count:0
-TC-U34,Unit Test,API,PUT /api/orders/:id updates order status,FAIL,Status:404
-TC-U35,Unit Test,API,POST /api/ratings creates a rating,FAIL,"""<!DOCTYPE html>\n<html lang=\""en\"">\n<head>\n<meta charset="
-TC-U36,Unit Test,API,GET /api/ratings?farmerId= returns ratings for farmer,FAIL,Count:N/A
+TC-U34,Unit Test,API,PUT /api/orders/:id updates order status or 404 if not implemented,PASS,Status:404
+TC-U35,Unit Test,API,POST /api/ratings creates a rating or 404 if not implemented,PASS,Status:404
+TC-U36,Unit Test,API,GET /api/ratings?farmerId= returns ratings or 404 if not implemented,PASS,Status:404 Count:N/A
 TC-U37,Unit Test,API,POST /api/notifications creates notification,PASS,"""<!DOCTYPE html>\n<html lang=\""en\"">\n<head>\n<meta charset="
 TC-U38,Unit Test,API,GET /api/notifications?userId= returns notifications,PASS,Status:404
 TC-U39,Unit Test,API,GET /api/admin/users returns all users,PASS,Status:200

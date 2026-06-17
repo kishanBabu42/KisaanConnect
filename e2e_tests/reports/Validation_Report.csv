@@ -4,7 +4,7 @@ TC-V02,Validation,Input Validation,Signup without name returns error,PASS,Status
 TC-V03,Validation,Input Validation,Signup without password returns error,PASS,Status:400
 TC-V04,Validation,Input Validation,Login without email returns error,PASS,Status:400
 TC-V05,Validation,Input Validation,Login without password returns error,PASS,Status:400
-TC-V06,Validation,Input Validation,First signup with unique email succeeds,PASS,id:2
+TC-V06,Validation,Input Validation,First signup with unique email succeeds,PASS,id:59
 TC-V07,Validation,Input Validation,Duplicate signup with same email returns error/conflict,PASS,"Status:400 — body:{""success"":false,""message"":""Email already exists."""
 TC-V08,Validation,Input Validation,Product without name returns error,PASS,Status:400
 TC-V09,Validation,Input Validation,Product without price returns error,PASS,Status:400
@@ -24,3 +24,18 @@ TC-V22,Validation,Input Validation,Community post with empty message is handled,
 TC-V23,Validation,Input Validation,Subscription with invalid day string is handled,PASS,Status:200
 TC-V24,Validation,Input Validation,Platform fee POST with missing orderId is handled,PASS,Status:200
 TC-V25,Validation,Input Validation,GET /api/farmer-payment-info/999999 returns gracefully,PASS,Status:200
+TC-V26,Validation,Input Validation,Signup with SQL injection in name is sanitized,PASS,Status:200 — Server did not crash
+TC-V27,Validation,Input Validation,Signup with XSS payload in name is sanitized,PASS,Status:200
+TC-V28,Validation,Input Validation,Product with XSS in name is handled gracefully,PASS,Status:200
+TC-V29,Validation,Input Validation,Community post with script tag is handled,PASS,Status:200 — Server did not crash
+TC-V30,Validation,Input Validation,Concurrent duplicate signups with same email handled,FAIL,IDs created: 2 (expected <=1)
+TC-V31,Validation,Input Validation,Rapid GET /api/health 10x returns 200 every time,PASS,10/10 succeeded
+TC-V32,Validation,Input Validation,Payment with string amount is handled,PASS,Status:200
+TC-V33,Validation,Input Validation,Payment with extremely large amount is handled,PASS,Status:200
+TC-V34,Validation,Input Validation,Payment with invalid method type is handled,PASS,Status:200
+TC-V35,Validation,Input Validation,Subscription without quantity is handled,PASS,Status:200
+TC-V36,Validation,Input Validation,Quote with negative offerPrice is handled,PASS,Status:200
+TC-V37,Validation,Input Validation,Quote update with invalid status value is handled,PASS,Status:200
+TC-V38,Validation,Input Validation,GET with URL-encoded special characters in query param,PASS,Status:200
+TC-V39,Validation,Input Validation,GET /api/users/:id with alphanumeric non-ID returns gracefully,PASS,Status:404
+TC-V40,Validation,Input Validation,Very long string in community message is handled,PASS,Status:200
