@@ -14,7 +14,7 @@ const path   = require('path');
 
 const RENDER_API_KEY = process.argv[2] || process.env.RENDER_API_KEY;
 const SERVICE_NAME   = 'kisaanconnect-api';
-const GITHUB_REPO    = 'https://github.com/dhanunjayroyal/KisaanConnect_Standalone';
+const GITHUB_REPO    = 'https://github.com/kishanBabu42/KisaanConnect';
 
 if (!RENDER_API_KEY || RENDER_API_KEY.startsWith('<')) {
     console.error('\n❌  Missing API key!\n');
@@ -110,7 +110,7 @@ async function main() {
             name:     SERVICE_NAME,
             ownerId:  owner.id,
             repo:     GITHUB_REPO,
-            branch:   'master',
+            branch:   'main',
             autoDeploy: 'yes',
             serviceDetails: {
                 env:            'node',
@@ -196,7 +196,7 @@ async function main() {
     try {
         execSync('git add env-config.js frontend-dist/env-config.js', { cwd: __dirname, stdio: 'pipe' });
         execSync(`git commit -m "deploy: connect to Render backend ${serviceUrl}"`, { cwd: __dirname, stdio: 'pipe' });
-        execSync('git push origin master', { cwd: __dirname, stdio: 'pipe' });
+        execSync('git push origin main', { cwd: __dirname, stdio: 'pipe' });
         console.log('✅  Pushed to GitHub');
     } catch (e) { console.log('⚠️   Git push skipped:', e.message.split('\n')[0]); }
 
