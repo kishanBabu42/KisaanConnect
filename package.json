@@ -13,7 +13,13 @@
     "build": "node build-env.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "test": "node test_all_apis.js"
+    "test": "node test_all_apis.js",
+    "test:web": "node e2e_tests/selenium/web_e2e.test.js",
+    "test:mobile": "node e2e_tests/appium/mobile_e2e.test.js",
+    "test:unit": "node e2e_tests/unit/unit_tests.js",
+    "test:validate": "node e2e_tests/validation/validation_tests.js",
+    "test:deploy": "node e2e_tests/deployment/deployment_status.js",
+    "test:all": "node e2e_tests/test_runner.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

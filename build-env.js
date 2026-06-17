@@ -63,6 +63,7 @@ const filesToCopy = [
     'veggies.png',
     'manifest.json',
     'temp.css',
+    'test-report.html',
 ];
 
 // Copy each file
