@@ -1,5 +1,5 @@
 Test Case ID,Test Type,Category,Test Description,Status,Notes
-TC-L01,Load Test,Performance,System handles 100 concurrent virtual users for 60s,PASS,"RPS: 16.31 RPS (Total: 84)"
-TC-L02,Load Test,Performance,Average response time is within SLA limit (<2000ms),PASS,"Avg: 3ms (Limit: 2000ms)"
-TC-L03,Load Test,Performance,P95 response time is within SLA limit (<8000ms),PASS,"P95: 6ms (Limit: 8000ms)"
+TC-L01,Load Test,Performance,System handles 100 concurrent virtual users for 60s,PASS,"RPS: 536.49 RPS (Total: 2852)"
+TC-L02,Load Test,Performance,Average response time is within SLA limit (<2000ms),PASS,"Avg: 5ms (Limit: 2000ms)"
+TC-L03,Load Test,Performance,P95 response time is within SLA limit (<4000ms),PASS,"P95: 14ms (Limit: 4000ms)"
 TC-L04,Load Test,Performance,Error rate is within SLA limit (<1%),PASS,"Error Rate: 0.00% (Limit: 1.0%)"

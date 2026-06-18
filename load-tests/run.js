@@ -86,14 +86,14 @@ async function main() {
     
     const tcL01Status = summary.totalRequests > 0 ? 'PASS' : 'FAIL';
     const tcL02Status = summary.avgResponseMs < 2000 ? 'PASS' : 'FAIL';
-    const tcL03Status = summary.p95Ms < 8000 ? 'PASS' : 'FAIL';
+    const tcL03Status = summary.p95Ms < 4000 ? 'PASS' : 'FAIL';
     const tcL04Status = parseFloat(summary.errorRate) < 1.0 ? 'PASS' : 'FAIL';
 
     const csvContent = [
       'Test Case ID,Test Type,Category,Test Description,Status,Notes',
       `TC-L01,Load Test,Performance,System handles 100 concurrent virtual users for 60s,${tcL01Status},"RPS: ${summary.requestsPerSecond} RPS (Total: ${summary.totalRequests})"`,
       `TC-L02,Load Test,Performance,Average response time is within SLA limit (<2000ms),${tcL02Status},"Avg: ${summary.avgResponseMs}ms (Limit: 2000ms)"`,
-      `TC-L03,Load Test,Performance,P95 response time is within SLA limit (<8000ms),${tcL03Status},"P95: ${summary.p95Ms}ms (Limit: 8000ms)"`,
+      `TC-L03,Load Test,Performance,P95 response time is within SLA limit (<4000ms),${tcL03Status},"P95: ${summary.p95Ms}ms (Limit: 4000ms)"`,
       `TC-L04,Load Test,Performance,Error rate is within SLA limit (<1%),${tcL04Status},"Error Rate: ${summary.errorRate}% (Limit: 1.0%)"`
     ].join('\n') + '\n';
 

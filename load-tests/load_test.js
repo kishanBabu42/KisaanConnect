@@ -14,7 +14,7 @@ const { EventEmitter } = require('events');
 // ── Configuration ──────────────────────────────────────────────────────────────
 const CONFIG = {
   baseUrl:      process.env.BASE_URL || 'http://localhost:3000',
-  virtualUsers: parseInt(process.env.VU || '100'),
+  virtualUsers: parseInt(process.env.VU || '200'),
   duration:     parseInt(process.env.DURATION || '60') * 1000, // ms
   rampUpMs:     5000,   // 5s ramp-up
   timeoutMs:    30000,  // 30s timeout — Firestore (africa-south1) can take 5-15s cold

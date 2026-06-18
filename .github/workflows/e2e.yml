@@ -292,7 +292,7 @@ jobs:
 
       - name: Run Load Testing Suite (Fast CI Mode)
         env:
-          VU: 50
+          VU: 200
           DURATION: 15
         run: npm run test:load
 

@@ -17,6 +17,7 @@ const admin = require('firebase-admin');
 
 let db = null;
 let initialized = false;
+let useLocalFallback = false;
 
 // ── IN-MEMORY TTL CACHE (reduces Firestore reads by ~80% on mobile) ───────────
 const TTL_MS   = 10_000;
@@ -152,9 +153,16 @@ async function createUser(data) {
 }
 
 async function findUserByEmail(email) {
-    if (initialized) {
-        const snap = await db.collection('users').where('email', '==', email).limit(1).get();
-        return snap.empty ? null : toRow(snap.docs[0]);
+    try {
+        if (initialized && !useLocalFallback) {
+            const snap = await db.collection('users').where('email', '==', email).limit(1).get();
+            return snap.empty ? null : toRow(snap.docs[0]);
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore findUserByEmail(${email}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     for (const u of memDb.users.values()) {
         if (u.email === email) return u;
@@ -163,11 +171,18 @@ async function findUserByEmail(email) {
 }
 
 async function findUserByEmailAndRole(email, password, role) {
-    if (initialized) {
-        let q = db.collection('users').where('email', '==', email).where('password', '==', password);
-        if (role) q = q.where('role', '==', role);
-        const snap = await q.limit(1).get();
-        return snap.empty ? null : toRow(snap.docs[0]);
+    try {
+        if (initialized && !useLocalFallback) {
+            let q = db.collection('users').where('email', '==', email).where('password', '==', password);
+            if (role) q = q.where('role', '==', role);
+            const snap = await q.limit(1).get();
+            return snap.empty ? null : toRow(snap.docs[0]);
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore findUserByEmailAndRole(${email}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     for (const u of memDb.users.values()) {
         if (u.email === email && u.password === password) {
@@ -179,24 +194,30 @@ async function findUserByEmailAndRole(email, password, role) {
 
 async function getUserById(id) {
     try {
-        if (initialized) {
+        if (initialized && !useLocalFallback) {
             const doc = await db.collection('users').doc(String(id)).get();
             return toRow(doc);
         }
     } catch (err) {
         console.warn(`⚠️  Firestore getUserById(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     return memDb.users.get(String(id)) || null;
 }
 
 async function getAllUsers() {
     try {
-        if (initialized) {
+        if (initialized && !useLocalFallback) {
             const snap = await db.collection('users').orderBy('createdAt', 'desc').get();
             return toDocs(snap);
         }
     } catch (err) {
         console.warn('⚠️  Firestore getAllUsers failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     if (memDb.users.size === 0) {
         // Seed mock users so list isn't empty on fallback
@@ -232,20 +253,27 @@ async function deleteUser(id) {
 }
 
 async function seedAdminUser() {
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@kisaanconnect.com';
-    const existing = await findUserByEmail(adminEmail);
-    if (!existing) {
-        await createUser({
-            name: 'Admin',
-            email: adminEmail,
-            password: process.env.ADMIN_PASSWORD || 'admin123',
-            role: 'admin',
-            mobile: '0000000000',
-            location: 'HQ'
-        });
-        console.log('✅ Admin user seeded:', adminEmail);
-    } else {
-        console.log('ℹ️  Admin user already exists:', adminEmail);
+    try {
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@kisaanconnect.com';
+        const existing = await findUserByEmail(adminEmail);
+        if (!existing) {
+            await createUser({
+                name: 'Admin',
+                email: adminEmail,
+                password: process.env.ADMIN_PASSWORD || 'admin123',
+                role: 'admin',
+                mobile: '0000000000',
+                location: 'HQ'
+            });
+            console.log('✅ Admin user seeded:', adminEmail);
+        } else {
+            console.log('ℹ️  Admin user already exists:', adminEmail);
+        }
+    } catch (err) {
+        console.error('⚠️  seedAdminUser error:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
 }
 
@@ -267,7 +295,7 @@ async function createProduct(data) {
 
 async function getProducts(farmerId) {
     try {
-        if (initialized) {
+        if (initialized && !useLocalFallback) {
             let q = db.collection('products').orderBy('createdAt', 'desc');
             if (farmerId) q = db.collection('products').where('farmerId', '==', String(farmerId)).orderBy('createdAt', 'desc');
             const snap = await q.get();
@@ -275,6 +303,9 @@ async function getProducts(farmerId) {
         }
     } catch (err) {
         console.warn('⚠️  Firestore getProducts failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     if (memDb.products.size === 0) {
         // Seed mock products so list isn't empty on fallback
