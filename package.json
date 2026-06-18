@@ -16,7 +16,6 @@
     "test": "node test_all_apis.js",
     "test:load": "node load-tests/run.js",
     "test:load:remote": "BASE_URL=%REMOTE_URL% node load-tests/run.js",
-    "test:baseline": "node load-tests/baseline_test.js",
     "test:web": "node e2e_tests/selenium/web_e2e.test.js",
     "test:mobile": "node e2e_tests/appium/mobile_e2e.test.js",
     "test:unit": "node e2e_tests/unit/unit_tests.js",

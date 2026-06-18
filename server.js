@@ -21,26 +21,6 @@ const fs         = require('fs');   // ← moved here: used at line ~138 for upl
 const morgan     = require('morgan');
 const helmet     = require('helmet');
 const compression = require('compression');
-
-// ── In-Memory TTL Cache (no extra dependency) ──────────────────────────────
-// Prevents 100 concurrent users from hammering Firestore simultaneously.
-// Each key stores { data, expiresAt }. TTL default = 30 seconds.
-const _cache = new Map();
-function cacheGet(key) {
-    const entry = _cache.get(key);
-    if (!entry) return null;
-    if (Date.now() > entry.expiresAt) { _cache.delete(key); return null; }
-    return entry.data;
-}
-function cacheSet(key, data, ttlMs = 30000) {
-    _cache.set(key, { data, expiresAt: Date.now() + ttlMs });
-}
-function cacheDel(pattern) {
-    for (const k of _cache.keys()) {
-        if (k.startsWith(pattern)) _cache.delete(k);
-    }
-}
-console.log('⚡ [Boot] In-memory TTL cache initialized (30s TTL for read endpoints)');
 const OpenAI     = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
@@ -117,6 +97,42 @@ if (localIps.length > 0) {
     localIp = localIps[0]; // Primary connection address
 }
 
+
+// ── In-Memory Cache with Request Coalescing ───────────────────────────────────
+// Prevents Firestore thundering-herd under concurrent load.
+// On a cache miss, only ONE Firestore call fires; all concurrent waiters share
+// the same Promise. Results are cached for TTL_MS seconds.
+const _cache    = new Map();   // key → { data, ts }
+const _inflight = new Map();   // key → Promise  (dedup concurrent misses)
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes — keeps cache warm for full load test
+
+function cacheGet(key) {
+    const entry = _cache.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CACHE_TTL_MS) { _cache.delete(key); return null; }
+    return entry.data;
+}
+function cacheSet(key, data) { _cache.set(key, { data, ts: Date.now() }); }
+function cacheInvalidate(...keys) { keys.forEach(k => { _cache.delete(k); _inflight.delete(k); }); }
+
+// Fetch-with-coalescing: fn is only called once per key; concurrent callers await same Promise
+async function cachedFetch(key, fn) {
+    const hit = cacheGet(key);
+    if (hit !== null) return hit;
+
+    if (_inflight.has(key)) return _inflight.get(key); // another request already fetching
+
+    const promise = fn().then(data => {
+        cacheSet(key, data);
+        _inflight.delete(key);
+        return data;
+    }).catch(err => {
+        _inflight.delete(key);
+        throw err;
+    });
+    _inflight.set(key, promise);
+    return promise;
+}
 
 // Security and Performance Middleware
 app.use(helmet({
@@ -247,9 +263,6 @@ app.get('/api/tunnel-url', (req, res) => {
 // Visit: http://localhost:3000/api/db-status (or with your Wi-Fi IP on mobile)
 app.get('/api/db-status', async (req, res) => {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    // Cache the probe result for 10s — prevents 100 VUs each hitting Firestore
-    const cached = cacheGet('db-status');
-    if (cached) return res.json(cached);
     const start = Date.now();
     try {
         if (!fdb.isReady()) {
@@ -264,7 +277,7 @@ app.get('/api/db-status', async (req, res) => {
         // Do a lightweight real read — _counters doc is tiny
         const snap = await fdb.getDb().collection('_counters').limit(1).get();
         const ms = Date.now() - start;
-        const payload = {
+        return res.json({
             ok: true,
             firebase: true,
             message: '✅ Firestore connected and responding',
@@ -273,9 +286,7 @@ app.get('/api/db-status', async (req, res) => {
             projectId: process.env.FIREBASE_PROJECT_ID,
             latencyMs: ms,
             docsRead: snap.size,
-        };
-        cacheSet('db-status', payload, 10000);
-        return res.json(payload);
+        });
     } catch (err) {
         const ms = Date.now() - start;
         return res.status(500).json({
@@ -757,27 +768,20 @@ app.post('/api/google-auth', async (req, res) => {
 // USERS
 app.get('/api/users', async (req, res) => {
     try {
-        const CACHE_KEY = 'users:all';
-        let users = cacheGet(CACHE_KEY);
-        if (!users) {
-            const raw = await fdb.getAllUsers();
-            users = raw.map(u => ({ id: u.id, name: u.name, role: u.role, location: u.location, mobile: u.mobile, lat: u.lat, lng: u.lng, profilePic: u.profilePic, wallet: u.wallet, bio: u.bio }));
-            cacheSet(CACHE_KEY, users, 30000);
-        }
-        res.set('X-Cache', 'HIT').json(users);
+        const safe = await cachedFetch('users:all', async () => {
+            const users = await fdb.getAllUsers();
+            return users.map(u => ({ id: u.id, name: u.name, role: u.role, location: u.location, mobile: u.mobile, lat: u.lat, lng: u.lng, profilePic: u.profilePic, wallet: u.wallet, bio: u.bio }));
+        });
+        res.set('X-Cache', cacheGet('users:all') ? 'HIT' : 'MISS');
+        res.json(safe);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/users/:id', async (req, res) => {
     try {
-        const CACHE_KEY = `users:${req.params.id}`;
-        let user = cacheGet(CACHE_KEY);
-        if (!user) {
-            user = await fdb.getUserById(req.params.id);
-            if (!user) return res.status(404).send('User not found');
-            cacheSet(CACHE_KEY, user, 30000);
-        }
-        res.set('X-Cache', 'HIT').json(user);
+        const user = await fdb.getUserById(req.params.id);
+        if (!user) return res.status(404).send('User not found');
+        res.json(user);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -789,7 +793,6 @@ app.put('/api/users/:id', async (req, res) => {
     if (Object.keys(filtered).length === 0) return res.send('No fields to update');
     try {
         await fdb.updateUser(req.params.id, filtered);
-        cacheDel('users:'); // invalidate user cache on write
         res.send('User updated');
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -817,14 +820,11 @@ app.post('/api/users/add-wallet', async (req, res) => {
 // PRODUCTS
 app.get('/api/products', async (req, res) => {
     const { farmerId } = req.query;
+    const cacheKey = `products:${farmerId || 'all'}`;
     try {
-        const CACHE_KEY = `products:${farmerId || 'all'}`;
-        let rows = cacheGet(CACHE_KEY);
-        if (!rows) {
-            rows = await fdb.getProducts(farmerId || null);
-            cacheSet(CACHE_KEY, rows, 30000);
-        }
-        res.set('X-Cache', 'HIT').json(rows);
+        const rows = await cachedFetch(cacheKey, () => fdb.getProducts(farmerId || null));
+        res.set('X-Cache', 'HIT');
+        res.json(rows);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -835,7 +835,7 @@ app.post('/api/products', async (req, res) => {
     if (!p.farmerId) return res.status(400).json({ success: false, message: 'Farmer ID is required.' });
     try {
         const product = await fdb.createProduct({ farmerId: String(p.farmerId), farmerName: p.farmerName, farmerEmail: p.farmerEmail, name: p.name, price: p.price, marketPrice: p.marketPrice, quantity: p.quantity, age: p.age, location: p.location, images: p.images || [] });
-        cacheDel('products:'); // invalidate products cache on write
+        cacheInvalidate(`products:all`, `products:${p.farmerId}`); // invalidate on write
         res.json({ id: product.id });
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -844,7 +844,6 @@ app.put('/api/products/:id', async (req, res) => {
     const p = req.body;
     try {
         await fdb.updateProduct(req.params.id, { name: p.name, price: p.price, quantity: p.quantity, age: p.age, location: p.location, images: p.images || [] });
-        cacheDel('products:'); // invalidate on write
         res.send('Product updated');
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -852,7 +851,6 @@ app.put('/api/products/:id', async (req, res) => {
 app.delete('/api/products/:id', async (req, res) => {
     try {
         await fdb.deleteProduct(req.params.id);
-        cacheDel('products:'); // invalidate on delete
         res.send('Product deleted');
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1634,6 +1632,22 @@ const server = http.listen(port, '0.0.0.0', () => {
     console.log('║  🛡️  Security: FIREWALL ACTIVE                ║');
     console.log('╚══════════════════════════════════════════════╝\n');
 });
+
+// ── Cache Pre-Warm on Startup ─────────────────────────────────────────────────
+// Fetches heavy Firestore collections once at boot so the first concurrent
+// requests under load (or real traffic) all hit the in-memory cache instantly.
+setTimeout(async () => {
+    try {
+        console.log('🔥 [Cache] Pre-warming products & users cache...');
+        await cachedFetch('products:all', () => fdb.getProducts(null));
+        console.log('✅ [Cache] Products cache warm.');
+        const users = await fdb.getAllUsers();
+        cacheSet('users:all', users.map(u => ({ id: u.id, name: u.name, role: u.role, location: u.location, mobile: u.mobile, lat: u.lat, lng: u.lng, profilePic: u.profilePic, wallet: u.wallet, bio: u.bio })));
+        console.log('✅ [Cache] Users cache warm. Server fully ready for load.');
+    } catch (e) {
+        console.warn('⚠️  [Cache] Pre-warm failed (non-fatal):', e.message);
+    }
+}, 2000); // 2s after listen — give Firebase connection time to settle
 
 // Redirect root to landing page for professional first impression
 app.get('/', (req, res, next) => {

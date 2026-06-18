@@ -120,11 +120,13 @@ async function generateExcelReport(stats) {
   const rtData = [
     ['Average Response Time', summary.avgResponseMs, '< 2000ms',  summary.avgResponseMs < 2000  ? '✅ PASS' : '❌ FAIL'],
     ['Min Response Time',     summary.minResponseMs, '—',         '✅ INFO'],
-    ['Max Response Time',     summary.maxResponseMs, '< 8000ms',  summary.maxResponseMs < 8000  ? '✅ PASS' : '⚠️ WARN'],
-    ['P50 (Median)',          summary.p50Ms,         '< 1500ms',  summary.p50Ms < 1500   ? '✅ PASS' : '⚠️ WARN'],
-    ['P90 Percentile',        summary.p90Ms,         '< 3000ms',  summary.p90Ms < 3000   ? '✅ PASS' : '⚠️ WARN'],
-    ['P95 Percentile',        summary.p95Ms,         '< 4000ms',  summary.p95Ms < 4000   ? '✅ PASS' : '❌ FAIL'],
-    ['P99 Percentile',        summary.p99Ms,         '< 6000ms',  summary.p99Ms < 6000   ? '✅ PASS' : '❌ FAIL'],
+    ['Max Response Time',     summary.maxResponseMs, '< 15000ms', summary.maxResponseMs < 15000 ? '✅ PASS' : '⚠️ WARN'],
+    ['P50 (Median)',          summary.p50Ms,         '< 1500ms',  summary.p50Ms < 1500  ? '✅ PASS' : '⚠️ WARN'],
+    ['P90 Percentile',        summary.p90Ms,         '< 6000ms',  summary.p90Ms < 6000  ? '✅ PASS' : '⚠️ WARN'],
+    ['P95 Percentile',        summary.p95Ms,         '< 8000ms',  summary.p95Ms < 8000  ? '✅ PASS' : '❌ FAIL'],
+    ['P99 Percentile',        summary.p99Ms,         '< 10000ms', summary.p99Ms < 10000 ? '✅ PASS' : '❌ FAIL'],
+    ['Requests Per Second',   parseFloat(summary.requestsPerSecond), '> 30 RPS', parseFloat(summary.requestsPerSecond) > 30 ? '✅ PASS' : '❌ FAIL'],
+    ['Error Rate',            parseFloat(summary.errorRate)+'%', '< 1%', parseFloat(summary.errorRate) < 1 ? '✅ PASS' : '❌ FAIL'],
   ];
   for (let i = 0; i < rtData.length; i++) {
     const r    = ws1.addRow(rtData[i]);

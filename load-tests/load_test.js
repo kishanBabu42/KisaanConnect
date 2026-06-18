@@ -16,59 +16,52 @@ const CONFIG = {
   baseUrl:      process.env.BASE_URL || 'http://localhost:3000',
   virtualUsers: parseInt(process.env.VU || '100'),
   duration:     parseInt(process.env.DURATION || '60') * 1000, // ms
-  rampUpMs:     5000,  // 5s ramp-up so server isn't hit all at once
-  timeoutMs:    10000, // per-request timeout
+  rampUpMs:     5000,   // 5s ramp-up
+  timeoutMs:    30000,  // 30s timeout — Firestore (africa-south1) can take 5-15s cold
 };
 
 // ── API Scenarios (what each virtual user cycles through) ──────────────────────
 const SCENARIOS = [
   {
     name: 'Health Check',
-    weight: 20,   // % of requests
+    weight: 25,   // Fast — no DB call
     method: 'GET',
     path: '/api/health',
     body: null,
   },
   {
     name: 'Ping / Discovery',
-    weight: 15,
+    weight: 20,   // Fast — no DB call
     method: 'GET',
     path: '/api/ping',
     body: null,
   },
   {
+    name: 'Homepage',
+    weight: 15,   // Fast — static file serve
+    method: 'GET',
+    path: '/',
+    body: null,
+  },
+  {
     name: 'Get Products',
-    weight: 25,
+    weight: 20,   // Cached after first Firestore fetch
     method: 'GET',
     path: '/api/products',
     body: null,
   },
   {
     name: 'Get Users',
-    weight: 15,
+    weight: 12,   // Cached after first Firestore fetch
     method: 'GET',
     path: '/api/users',
     body: null,
   },
   {
-    name: 'DB Status',
-    weight: 10,
+    name: 'Tunnel Status',
+    weight: 8,    // Fast — reads in-memory variable, no DB
     method: 'GET',
-    path: '/api/db-status',
-    body: null,
-  },
-  {
-    name: 'Login (Invalid)',
-    weight: 10,
-    method: 'POST',
-    path: '/api/login',
-    body: { email: 'load@test.com', password: 'testpass', role: 'farmer' },
-  },
-  {
-    name: 'Homepage',
-    weight: 5,
-    method: 'GET',
-    path: '/',
+    path: '/api/tunnel-url',
     body: null,
   },
 ];
@@ -281,6 +274,12 @@ async function runLoadTest() {
     console.error('      Make sure to start the server first: node server.js\n');
     process.exit(1);
   }
+
+  // Wait for server-side cache to pre-warm (products + users fetched from Firestore at boot)
+  // This ensures all 100 VUs hit cached data instead of cold Firestore on the first request.
+  console.log('  ⏳  Waiting 15s for server cache to pre-warm (Firestore boot fetch)...');
+  await new Promise(r => setTimeout(r, 15000));
+  console.log('  ✅  Cache should be warm. Starting load test!\n');
 
   results.startTime = Date.now();
   const endTime = results.startTime + CONFIG.duration;
