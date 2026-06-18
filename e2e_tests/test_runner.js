@@ -83,8 +83,8 @@ function main() {
     const SUITE_FILES = [
         { name:'Selenium Web',    file:'Selenium_Report.csv',    icon:'🌐', expected:50 },
         { name:'Appium Android',  file:'Appium_Report.csv',      icon:'📱', expected:50 },
-        { name:'Unit Tests',      file:'Unit_Report.csv',        icon:'🔬', expected:30 },
-        { name:'Validation',      file:'Validation_Report.csv',  icon:'✅', expected:25 },
+        { name:'Unit Tests',      file:'Unit_Report.csv',        icon:'🔬', expected:50 },
+        { name:'Validation',      file:'Validation_Report.csv',  icon:'✅', expected:40 },
         { name:'Deployment',      file:'Deployment_Report.csv',  icon:'🚀', expected:15 },
         { name:'Load Testing',    file:'Load_Report.csv',        icon:'📊', expected:4 },
     ];
@@ -119,7 +119,7 @@ function main() {
     console.log(gFail===0 ? `  🎉 ALL ${gTotal} TESTS PASSED!` : `  ⚠️  ${gFail} failed.`);
 
     /* Combined CSV */
-    const hdr = 'Test Case ID,Test Type,Category,Test Description,Status,Notes\n';
+    const hdr = 'Test Case,Test Type,Category,Test Description,Status,Notes\n';
     fs.writeFileSync(path.join(CONFIG.REPORTS_DIR,'E2E_Test_Report.csv'),
         hdr + allRows.map(r=>`${esc(r.id)},${esc(r.type)},${esc(r.cat)},${esc(r.desc)},${esc(r.status)},${esc(r.notes)}`).join('\n')+'\n','utf8');
     console.log('\n💾 E2E_Test_Report.csv saved');

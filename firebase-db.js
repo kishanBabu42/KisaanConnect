@@ -19,6 +19,16 @@ let db = null;
 let initialized = false;
 let useLocalFallback = false;
 
+function withTimeout(promise, ms = 2000) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('RESOURCE_EXHAUSTED: Firestore timeout')), ms);
+        promise.then(
+            res => { clearTimeout(timer); resolve(res); },
+            err => { clearTimeout(timer); reject(err); }
+        );
+    });
+}
+
 // ── IN-MEMORY TTL CACHE (reduces Firestore reads by ~80% on mobile) ───────────
 const TTL_MS   = 10_000;
 const _cache   = new Map();
@@ -140,11 +150,18 @@ function toDocs(snapshot) {
 // USERS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function createUser(data) {
-    if (initialized) {
-        const id = await nextId('users');
-        const user = { id, createdAt: now(), wallet: 0, ...data };
-        await db.collection('users').doc(String(id)).set(user);
-        return user;
+    try {
+        if (initialized && !useLocalFallback) {
+            const id = await withTimeout(nextId('users'));
+            const user = { id, createdAt: now(), wallet: 0, ...data };
+            await withTimeout(db.collection('users').doc(String(id)).set(user));
+            return user;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore createUser failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const id = nextMemId('users');
     const user = { id, createdAt: now(), wallet: 0, ...data };
@@ -155,7 +172,7 @@ async function createUser(data) {
 async function findUserByEmail(email) {
     try {
         if (initialized && !useLocalFallback) {
-            const snap = await db.collection('users').where('email', '==', email).limit(1).get();
+            const snap = await withTimeout(db.collection('users').where('email', '==', email).limit(1).get());
             return snap.empty ? null : toRow(snap.docs[0]);
         }
     } catch (err) {
@@ -175,7 +192,7 @@ async function findUserByEmailAndRole(email, password, role) {
         if (initialized && !useLocalFallback) {
             let q = db.collection('users').where('email', '==', email).where('password', '==', password);
             if (role) q = q.where('role', '==', role);
-            const snap = await q.limit(1).get();
+            const snap = await withTimeout(q.limit(1).get());
             return snap.empty ? null : toRow(snap.docs[0]);
         }
     } catch (err) {
@@ -195,7 +212,7 @@ async function findUserByEmailAndRole(email, password, role) {
 async function getUserById(id) {
     try {
         if (initialized && !useLocalFallback) {
-            const doc = await db.collection('users').doc(String(id)).get();
+            const doc = await withTimeout(db.collection('users').doc(String(id)).get());
             return toRow(doc);
         }
     } catch (err) {
@@ -210,7 +227,7 @@ async function getUserById(id) {
 async function getAllUsers() {
     try {
         if (initialized && !useLocalFallback) {
-            const snap = await db.collection('users').orderBy('createdAt', 'desc').get();
+            const snap = await withTimeout(db.collection('users').orderBy('createdAt', 'desc').get());
             return toDocs(snap);
         }
     } catch (err) {
@@ -228,9 +245,16 @@ async function getAllUsers() {
 }
 
 async function updateUser(id, data) {
-    if (initialized) {
-        await db.collection('users').doc(String(id)).update(data);
-        return getUserById(id);
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('users').doc(String(id)).update(data));
+            return getUserById(id);
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore updateUser(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const user = memDb.users.get(String(id));
     if (!user) {
@@ -242,9 +266,16 @@ async function updateUser(id, data) {
 }
 
 async function deleteUser(id) {
-    if (initialized) {
-        await db.collection('users').doc(String(id)).delete();
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('users').doc(String(id)).delete());
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore deleteUser(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     if (!memDb.users.has(String(id))) {
         throw new Error('NOT_FOUND: No document to delete: users/' + id);
@@ -281,11 +312,18 @@ async function seedAdminUser() {
 // PRODUCTS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function createProduct(data) {
-    if (initialized) {
-        const id = await nextId('products');
-        const product = { id, createdAt: now(), status: 'active', ...data };
-        await db.collection('products').doc(String(id)).set(product);
-        return product;
+    try {
+        if (initialized && !useLocalFallback) {
+            const id = await withTimeout(nextId('products'));
+            const product = { id, createdAt: now(), status: 'active', ...data };
+            await withTimeout(db.collection('products').doc(String(id)).set(product));
+            return product;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore createProduct failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const id = nextMemId('products');
     const product = { id, createdAt: now(), status: 'active', ...data };
@@ -298,7 +336,7 @@ async function getProducts(farmerId) {
         if (initialized && !useLocalFallback) {
             let q = db.collection('products').orderBy('createdAt', 'desc');
             if (farmerId) q = db.collection('products').where('farmerId', '==', String(farmerId)).orderBy('createdAt', 'desc');
-            const snap = await q.get();
+            const snap = await withTimeout(q.get());
             return toDocs(snap);
         }
     } catch (err) {
@@ -320,9 +358,16 @@ async function getProducts(farmerId) {
 }
 
 async function updateProduct(id, data) {
-    if (initialized) {
-        await db.collection('products').doc(String(id)).update(data);
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('products').doc(String(id)).update(data));
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore updateProduct(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const p = memDb.products.get(String(id));
     if (!p) {
@@ -332,9 +377,16 @@ async function updateProduct(id, data) {
 }
 
 async function deleteProduct(id) {
-    if (initialized) {
-        await db.collection('products').doc(String(id)).delete();
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('products').doc(String(id)).delete());
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore deleteProduct(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     if (!memDb.products.has(String(id))) {
         throw new Error('NOT_FOUND: No document to delete: products/' + id);
@@ -346,12 +398,19 @@ async function deleteProduct(id) {
 // ORDERS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function createOrder(data) {
-    if (initialized) {
-        const id = await nextId('orders');
-        const order = { id, createdAt: now(), status: 'pending', ...data };
-        await db.collection('orders').doc(String(id)).set(order);
-        cacheInvalidate('orders:');
-        return order;
+    try {
+        if (initialized && !useLocalFallback) {
+            const id = await withTimeout(nextId('orders'));
+            const order = { id, createdAt: now(), status: 'pending', ...data };
+            await withTimeout(db.collection('orders').doc(String(id)).set(order));
+            cacheInvalidate('orders:');
+            return order;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore createOrder failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const id = nextMemId('orders');
     const order = { id, createdAt: now(), status: 'pending', ...data };
@@ -360,20 +419,27 @@ async function createOrder(data) {
 }
 
 async function getOrders(filter = {}) {
-    if (initialized) {
-        const cKey = `orders:${filter.farmerId||''}:${filter.customerId||''}:${filter.driverId||''}`;
-        const hit = cacheGet(cKey);
-        if (hit) return hit;
+    try {
+        if (initialized && !useLocalFallback) {
+            const cKey = `orders:${filter.farmerId||''}:${filter.customerId||''}:${filter.driverId||''}`;
+            const hit = cacheGet(cKey);
+            if (hit) return hit;
 
-        let q = db.collection('orders').orderBy('createdAt', 'desc');
-        if (filter.farmerId)   q = db.collection('orders').where('farmerId',          '==', String(filter.farmerId)).orderBy('createdAt','desc');
-        if (filter.customerId) q = db.collection('orders').where('customerId',        '==', String(filter.customerId)).orderBy('createdAt','desc');
-        if (filter.driverId)   q = db.collection('orders').where('deliveryPartnerId', '==', String(filter.driverId)).orderBy('createdAt','desc');
+            let q = db.collection('orders').orderBy('createdAt', 'desc');
+            if (filter.farmerId)   q = db.collection('orders').where('farmerId',          '==', String(filter.farmerId)).orderBy('createdAt','desc');
+            if (filter.customerId) q = db.collection('orders').where('customerId',        '==', String(filter.customerId)).orderBy('createdAt','desc');
+            if (filter.driverId)   q = db.collection('orders').where('deliveryPartnerId', '==', String(filter.driverId)).orderBy('createdAt','desc');
 
-        const snap = await q.get();
-        const rows = toDocs(snap);
-        cacheSet(cKey, rows);
-        return rows;
+            const snap = await withTimeout(q.get());
+            const rows = toDocs(snap);
+            cacheSet(cKey, rows);
+            return rows;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore getOrders failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     let list = Array.from(memDb.orders.values());
     if (filter.farmerId) {
@@ -389,10 +455,17 @@ async function getOrders(filter = {}) {
 }
 
 async function updateOrder(id, data) {
-    if (initialized) {
-        await db.collection('orders').doc(String(id)).update(data);
-        cacheInvalidate('orders:');
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('orders').doc(String(id)).update(data));
+            cacheInvalidate('orders:');
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore updateOrder(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const o = memDb.orders.get(String(id));
     if (!o) {
@@ -405,12 +478,19 @@ async function updateOrder(id, data) {
 // QUOTES
 // ═══════════════════════════════════════════════════════════════════════════════
 async function createQuote(data) {
-    if (initialized) {
-        const id = await nextId('quotes');
-        const quote = { id, createdAt: now(), status: 'pending', ...data };
-        await db.collection('quotes').doc(String(id)).set(quote);
-        cacheInvalidate('quotes:');
-        return quote;
+    try {
+        if (initialized && !useLocalFallback) {
+            const id = await withTimeout(nextId('quotes'));
+            const quote = { id, createdAt: now(), status: 'pending', ...data };
+            await withTimeout(db.collection('quotes').doc(String(id)).set(quote));
+            cacheInvalidate('quotes:');
+            return quote;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore createQuote failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const id = nextMemId('quotes');
     const quote = { id, createdAt: now(), status: 'pending', ...data };
@@ -419,19 +499,26 @@ async function createQuote(data) {
 }
 
 async function getQuotes(filter = {}) {
-    if (initialized) {
-        const cKey = `quotes:${filter.farmerId||''}:${filter.customerId||''}`;
-        const hit = cacheGet(cKey);
-        if (hit) return hit;
+    try {
+        if (initialized && !useLocalFallback) {
+            const cKey = `quotes:${filter.farmerId||''}:${filter.customerId||''}`;
+            const hit = cacheGet(cKey);
+            if (hit) return hit;
 
-        let q = db.collection('quotes').orderBy('createdAt', 'desc');
-        if (filter.farmerId)   q = db.collection('quotes').where('farmerId',   '==', String(filter.farmerId)).orderBy('createdAt','desc');
-        if (filter.customerId) q = db.collection('quotes').where('customerId', '==', String(filter.customerId)).orderBy('createdAt','desc');
+            let q = db.collection('quotes').orderBy('createdAt', 'desc');
+            if (filter.farmerId)   q = db.collection('quotes').where('farmerId',   '==', String(filter.farmerId)).orderBy('createdAt','desc');
+            if (filter.customerId) q = db.collection('quotes').where('customerId', '==', String(filter.customerId)).orderBy('createdAt','desc');
 
-        const snap = await q.get();
-        const rows = toDocs(snap);
-        cacheSet(cKey, rows);
-        return rows;
+            const snap = await withTimeout(q.get());
+            const rows = toDocs(snap);
+            cacheSet(cKey, rows);
+            return rows;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore getQuotes failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     let list = Array.from(memDb.quotes.values());
     if (filter.farmerId) {
@@ -444,11 +531,18 @@ async function getQuotes(filter = {}) {
 }
 
 async function updateQuote(id, data) {
-    if (initialized) {
-        await db.collection('quotes').doc(String(id)).update(data);
-        cacheInvalidate('quotes:');
-        cacheInvalidate('orders:');
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('quotes').doc(String(id)).update(data));
+            cacheInvalidate('quotes:');
+            cacheInvalidate('orders:');
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore updateQuote(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const q = memDb.quotes.get(String(id));
     if (!q) {
@@ -476,12 +570,19 @@ async function updateQuote(id, data) {
 // SUBSCRIPTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function createSubscription(data) {
-    if (initialized) {
-        const id = await nextId('subscriptions');
-        const sub = { id, createdAt: now(), status: 'active', ...data };
-        await db.collection('subscriptions').doc(String(id)).set(sub);
-        cacheInvalidate('subs:');
-        return sub;
+    try {
+        if (initialized && !useLocalFallback) {
+            const id = await withTimeout(nextId('subscriptions'));
+            const sub = { id, createdAt: now(), status: 'active', ...data };
+            await withTimeout(db.collection('subscriptions').doc(String(id)).set(sub));
+            cacheInvalidate('subs:');
+            return sub;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore createSubscription failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const id = nextMemId('subscriptions');
     const sub = { id, createdAt: now(), status: 'active', ...data };
@@ -490,19 +591,26 @@ async function createSubscription(data) {
 }
 
 async function getSubscriptions(filter = {}) {
-    if (initialized) {
-        const cKey = `subs:${filter.farmerId||''}:${filter.customerId||''}`;
-        const hit = cacheGet(cKey);
-        if (hit) return hit;
+    try {
+        if (initialized && !useLocalFallback) {
+            const cKey = `subs:${filter.farmerId||''}:${filter.customerId||''}`;
+            const hit = cacheGet(cKey);
+            if (hit) return hit;
 
-        let q = db.collection('subscriptions').orderBy('createdAt', 'desc');
-        if (filter.farmerId)   q = db.collection('subscriptions').where('farmerId',   '==', String(filter.farmerId)).orderBy('createdAt','desc');
-        if (filter.customerId) q = db.collection('subscriptions').where('customerId', '==', String(filter.customerId)).orderBy('createdAt','desc');
+            let q = db.collection('subscriptions').orderBy('createdAt', 'desc');
+            if (filter.farmerId)   q = db.collection('subscriptions').where('farmerId',   '==', String(filter.farmerId)).orderBy('createdAt','desc');
+            if (filter.customerId) q = db.collection('subscriptions').where('customerId', '==', String(filter.customerId)).orderBy('createdAt','desc');
 
-        const snap = await q.get();
-        const rows = toDocs(snap);
-        cacheSet(cKey, rows);
-        return rows;
+            const snap = await withTimeout(q.get());
+            const rows = toDocs(snap);
+            cacheSet(cKey, rows);
+            return rows;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore getSubscriptions failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     let list = Array.from(memDb.subscriptions.values());
     if (filter.farmerId) {
@@ -515,10 +623,17 @@ async function getSubscriptions(filter = {}) {
 }
 
 async function updateSubscription(id, data) {
-    if (initialized) {
-        await db.collection('subscriptions').doc(String(id)).update(data);
-        cacheInvalidate('subs:');
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('subscriptions').doc(String(id)).update(data));
+            cacheInvalidate('subs:');
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore updateSubscription(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const s = memDb.subscriptions.get(String(id));
     if (!s) {
@@ -528,10 +643,17 @@ async function updateSubscription(id, data) {
 }
 
 async function deleteSubscription(id) {
-    if (initialized) {
-        await db.collection('subscriptions').doc(String(id)).delete();
-        cacheInvalidate('subs:');
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('subscriptions').doc(String(id)).delete());
+            cacheInvalidate('subs:');
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore deleteSubscription(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     if (!memDb.subscriptions.has(String(id))) {
         throw new Error('NOT_FOUND: No document to delete: subscriptions/' + id);
@@ -543,11 +665,18 @@ async function deleteSubscription(id) {
 // PAYMENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function createPayment(data) {
-    if (initialized) {
-        const id = await nextId('payments');
-        const payment = { id, createdAt: now(), ...data };
-        await db.collection('payments').doc(String(id)).set(payment);
-        return payment;
+    try {
+        if (initialized && !useLocalFallback) {
+            const id = await withTimeout(nextId('payments'));
+            const payment = { id, createdAt: now(), ...data };
+            await withTimeout(db.collection('payments').doc(String(id)).set(payment));
+            return payment;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore createPayment failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const id = nextMemId('payments');
     const payment = { id, createdAt: now(), ...data };
@@ -556,18 +685,25 @@ async function createPayment(data) {
 }
 
 async function getPayments(userId) {
-    if (initialized) {
-        const cKey = `payments:${userId||''}`;
-        const hit = cacheGet(cKey);
-        if (hit) return hit;
+    try {
+        if (initialized && !useLocalFallback) {
+            const cKey = `payments:${userId||''}`;
+            const hit = cacheGet(cKey);
+            if (hit) return hit;
 
-        let q = db.collection('payments').orderBy('createdAt', 'desc');
-        if (userId) q = db.collection('payments').where('userId', '==', String(userId)).orderBy('createdAt','desc');
+            let q = db.collection('payments').orderBy('createdAt', 'desc');
+            if (userId) q = db.collection('payments').where('userId', '==', String(userId)).orderBy('createdAt','desc');
 
-        const snap = await q.get();
-        const rows = toDocs(snap);
-        cacheSet(cKey, rows);
-        return rows;
+            const snap = await withTimeout(q.get());
+            const rows = toDocs(snap);
+            cacheSet(cKey, rows);
+            return rows;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore getPayments failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     let list = Array.from(memDb.payments.values());
     if (userId) {
@@ -580,19 +716,33 @@ async function getPayments(userId) {
 // COMMUNITY POSTS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function getCommunityPosts() {
-    if (initialized) {
-        const snap = await db.collection('community_posts').orderBy('timestamp', 'desc').get();
-        return toDocs(snap);
+    try {
+        if (initialized && !useLocalFallback) {
+            const snap = await withTimeout(db.collection('community_posts').orderBy('timestamp', 'desc').get());
+            return toDocs(snap);
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore getCommunityPosts failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     return Array.from(memDb.community_posts.values()).sort((a,b) => b.timestamp.localeCompare(a.timestamp));
 }
 
 async function createCommunityPost(data) {
-    if (initialized) {
-        const id = await nextId('community_posts');
-        const post = { id, timestamp: now(), likes: 0, ...data };
-        await db.collection('community_posts').doc(String(id)).set(post);
-        return post;
+    try {
+        if (initialized && !useLocalFallback) {
+            const id = await withTimeout(nextId('community_posts'));
+            const post = { id, timestamp: now(), likes: 0, ...data };
+            await withTimeout(db.collection('community_posts').doc(String(id)).set(post));
+            return post;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore createCommunityPost failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const id = nextMemId('community_posts');
     const post = { id, timestamp: now(), likes: 0, ...data };
@@ -601,14 +751,21 @@ async function createCommunityPost(data) {
 }
 
 async function likeCommunityPost(id) {
-    if (initialized) {
-        const ref = db.collection('community_posts').doc(String(id));
-        await db.runTransaction(async t => {
-            const doc = await t.get(ref);
-            const likes = (doc.data().likes || 0) + 1;
-            t.update(ref, { likes });
-        });
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            const ref = db.collection('community_posts').doc(String(id));
+            await withTimeout(db.runTransaction(async t => {
+                const doc = await t.get(ref);
+                const likes = (doc.data().likes || 0) + 1;
+                t.update(ref, { likes });
+            }));
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore likeCommunityPost(${id}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const post = memDb.community_posts.get(String(id));
     if (post) {
@@ -620,21 +777,35 @@ async function likeCommunityPost(id) {
 // CALENDAR NOTES
 // ═══════════════════════════════════════════════════════════════════════════════
 async function getCalendarNotes(userId) {
-    if (initialized) {
-        const snap = await db.collection('calendar_notes').where('userId', '==', String(userId)).get();
-        return toDocs(snap);
+    try {
+        if (initialized && !useLocalFallback) {
+            const snap = await withTimeout(db.collection('calendar_notes').where('userId', '==', String(userId)).get());
+            return toDocs(snap);
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore getCalendarNotes(${userId}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     return Array.from(memDb.calendar_notes.values()).filter(n => String(n.userId) === String(userId));
 }
 
 async function upsertCalendarNote(userId, date, note) {
-    if (initialized) {
-        const docId = `${userId}_${date}`;
-        await db.collection('calendar_notes').doc(docId).set(
-            { userId: String(userId), date, note, id: docId },
-            { merge: true }
-        );
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            const docId = `${userId}_${date}`;
+            await withTimeout(db.collection('calendar_notes').doc(docId).set(
+                { userId: String(userId), date, note, id: docId },
+                { merge: true }
+            ));
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️  Firestore upsertCalendarNote(${userId}) failed, using local In-Memory DB:`, err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const docId = `${userId}_${date}`;
     memDb.calendar_notes.set(docId, { userId: String(userId), date, note, id: docId });
@@ -644,28 +815,42 @@ async function upsertCalendarNote(userId, date, note) {
 // OTP (Forgot Password)
 // ═══════════════════════════════════════════════════════════════════════════════
 async function saveOTP(email, otp) {
-    if (initialized) {
-        const expiresAt = new Date(Date.now() + 60 * 1000).toISOString();
-        await db.collection('otps').doc(email).set({ email, otp, expiresAt, createdAt: now() });
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            const expiresAt = new Date(Date.now() + 60 * 1000).toISOString();
+            await withTimeout(db.collection('otps').doc(email).set({ email, otp, expiresAt, createdAt: now() }));
+            return;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore saveOTP failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const expiresAt = new Date(Date.now() + 60 * 1000).toISOString();
     memDb.otps.set(email, { email, otp, expiresAt, createdAt: now() });
 }
 
 async function verifyOTP(email, otp) {
-    if (initialized) {
-        const doc = await db.collection('otps').doc(email).get();
-        if (!doc.exists) return { valid: false, message: 'No OTP found. Please request a new one.' };
-        const data = doc.data();
-        if (new Date() > new Date(data.expiresAt)) {
-            await db.collection('otps').doc(email).delete();
-            return { valid: false, message: 'OTP expired. Please click Resend OTP.' };
+    try {
+        if (initialized && !useLocalFallback) {
+            const doc = await withTimeout(db.collection('otps').doc(email).get());
+            if (!doc.exists) return { valid: false, message: 'No OTP found. Please request a new one.' };
+            const data = doc.data();
+            if (new Date() > new Date(data.expiresAt)) {
+                await withTimeout(db.collection('otps').doc(email).delete());
+                return { valid: false, message: 'OTP expired. Please click Resend OTP.' };
+            }
+            if (data.otp !== String(otp)) {
+                return { valid: false, message: 'Incorrect OTP. Please try again.' };
+            }
+            return { valid: true };
         }
-        if (data.otp !== String(otp)) {
-            return { valid: false, message: 'Incorrect OTP. Please try again.' };
+    } catch (err) {
+        console.warn('⚠️  Firestore verifyOTP failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
         }
-        return { valid: true };
     }
     const data = memDb.otps.get(email);
     if (!data) return { valid: false, message: 'No OTP found. Please request a new one.' };
@@ -680,9 +865,16 @@ async function verifyOTP(email, otp) {
 }
 
 async function consumeOTP(email) {
-    if (initialized) {
-        await db.collection('otps').doc(email).delete();
-        return;
+    try {
+        if (initialized && !useLocalFallback) {
+            await withTimeout(db.collection('otps').doc(email).delete());
+            return;
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore consumeOTP failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     memDb.otps.delete(email);
 }
@@ -691,27 +883,34 @@ async function consumeOTP(email) {
 // ADMIN STATS
 // ═══════════════════════════════════════════════════════════════════════════════
 async function getAdminStats() {
-    if (initialized) {
-        const [users, orders, products, subscriptions, payments] = await Promise.all([
-            db.collection('users').get(),
-            db.collection('orders').get(),
-            db.collection('products').where('status', '==', 'active').get(),
-            db.collection('subscriptions').get(),
-            db.collection('payments').get(),
-        ]);
-        const allUsers = toDocs(users);
-        const allOrders = toDocs(orders);
-        const allPayments = toDocs(payments);
-        const revenue = allPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-        return {
-            farmers:        allUsers.filter(u => u.role === 'farmer').length,
-            customers:      allUsers.filter(u => u.role === 'customer').length,
-            orders:         allOrders.length,
-            activeProducts: products.size,
-            subscriptions:  subscriptions.size,
-            revenue,
-            transactions:   allPayments.length,
-        };
+    try {
+        if (initialized && !useLocalFallback) {
+            const [users, orders, products, subscriptions, payments] = await withTimeout(Promise.all([
+                db.collection('users').get(),
+                db.collection('orders').get(),
+                db.collection('products').where('status', '==', 'active').get(),
+                db.collection('subscriptions').get(),
+                db.collection('payments').get(),
+            ]));
+            const allUsers = toDocs(users);
+            const allOrders = toDocs(orders);
+            const allPayments = toDocs(payments);
+            const revenue = allPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+            return {
+                farmers:        allUsers.filter(u => u.role === 'farmer').length,
+                customers:      allUsers.filter(u => u.role === 'customer').length,
+                orders:         allOrders.length,
+                activeProducts: products.size,
+                subscriptions:  subscriptions.size,
+                revenue,
+                transactions:   allPayments.length,
+            };
+        }
+    } catch (err) {
+        console.warn('⚠️  Firestore getAdminStats failed, using local In-Memory DB:', err.message);
+        if (err.message.includes('Quota exceeded') || err.message.includes('RESOURCE_EXHAUSTED')) {
+            useLocalFallback = true;
+        }
     }
     const allUsers = Array.from(memDb.users.values());
     const allOrders = Array.from(memDb.orders.values());

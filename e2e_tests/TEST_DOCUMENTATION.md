@@ -16,9 +16,10 @@ GitHub Actions Trigger (e2e.yml — 6 Jobs)
 ┌─────────────────────────────────────────────┐
 │  Job 1: 🌐 Selenium Web Tests     (50 cases) │
 │  Job 2: 📱 Appium Android Tests   (50 cases) │
-│  Job 3: 🔬 Unit Tests             (30 cases) │
-│  Job 4: ✅ Validation Tests       (25 cases) │
+│  Job 3: 🔬 Unit Tests             (50 cases) │
+│  Job 4: ✅ Validation Tests       (40 cases) │
 │  Job 5: 🚀 Deployment Status      (15 cases) │
+│  Job 6: 📊 Load Testing           (4 cases)  │
 └─────────────────────────────────────────────┘
       ↓
 Job 6: 📊 Compile HTML Report + Deploy to GitHub Pages
@@ -158,8 +159,8 @@ node server.js
 # 2. Run each suite (separate terminal)
 npm run test:web        # 50 Selenium web tests
 npm run test:mobile     # 50 Appium Android tests
-npm run test:unit       # 30 API unit tests
-npm run test:validate   # 25 validation tests
+npm run test:unit       # 50 API unit tests
+npm run test:validate   # 40 validation tests
 npm run test:deploy     # 15 deployment checks
 
 # 3. Generate HTML report
@@ -175,23 +176,24 @@ npm run test:all
 ```bash
 git add .
 git commit -m "Update feature"
-git push   # ← Actions automatically runs all 170 tests
+git push   # ← Actions automatically runs all 209 tests
 ```
 
 **Actions URL:** https://github.com/dhanunjayroyal/KisaanConnect/actions/workflows/e2e.yml
 
 ---
 
-## Grand Summary — 170 Unique Test Cases
+## Grand Summary — 209 Unique Test Cases
 
 | Suite | Type | Cases |
 |:---|:---|:---:|
 | 🌐 Selenium Web | UI/UX + Functional | 50 |
 | 📱 Appium Android | Mobile E2E | 50 |
-| 🔬 Unit Tests | API Unit Testing | 30 |
-| ✅ Validation | Input Validation | 25 |
+| 🔬 Unit Tests | API Unit Testing | 50 |
+| ✅ Validation | Input Validation | 40 |
 | 🚀 Deployment | Infrastructure Status | 15 |
-| **TOTAL** | **All Categories** | **170** |
+| 📊 Load Testing | Performance SLA | 4 |
+| **TOTAL** | **All Categories** | **209** |
 
 ---
 
@@ -309,7 +311,7 @@ git push   # ← Actions automatically runs all 170 tests
 
 ---
 
-## 🔬 Unit Tests (30 Cases)
+## 🔬 Unit Tests (50 Cases)
 
 | ID | Category | Description |
 |:---|:---|:---|
@@ -343,10 +345,30 @@ git push   # ← Actions automatically runs all 170 tests
 | TC-U28 | Calendar | POST /api/calendar_notes saves note |
 | TC-U29 | Calendar | GET /api/calendar_notes/:id returns notes |
 | TC-U30 | Orders | GET /api/orders returns array |
+| TC-U31 | Orders | POST /api/orders creates an order |
+| TC-U32 | Orders | GET /api/orders?farmerId= filters orders |
+| TC-U33 | Orders | GET /api/orders?customerId= filters orders |
+| TC-U34 | Orders | PUT /api/orders/:id updates status or 404 |
+| TC-U35 | Ratings | POST /api/ratings creates rating or 404 |
+| TC-U36 | Ratings | GET /api/ratings?farmerId= returns ratings or 404 |
+| TC-U37 | Notifications | POST /api/notifications creates notification |
+| TC-U38 | Notifications | GET /api/notifications?userId= returns notifications or 404 |
+| TC-U39 | Admin API | GET /api/admin/users returns all users |
+| TC-U40 | Admin API | GET /api/admin/products returns all products |
+| TC-U41 | Admin API | GET /api/admin/stats returns platform statistics |
+| TC-U42 | Products API | GET /api/products?search= filters by keyword |
+| TC-U43 | Products API | GET /api/products?location= filters by location |
+| TC-U44 | Products API | GET /api/products?maxPrice= filters by max price |
+| TC-U45 | Security | Server sets X-Content-Type-Options header |
+| TC-U46 | Security | CORS headers present on API response |
+| TC-U47 | Security | POST body with invalid JSON returns 400 |
+| TC-U48 | Products API | DELETE /api/products/:id removes product |
+| TC-U49 | Subscriptions | DELETE /api/subscriptions/:id removes subscription |
+| TC-U50 | Stability | Server stays responsive after concurrent requests |
 
 ---
 
-## ✅ Validation Tests (25 Cases)
+## ✅ Validation Tests (40 Cases)
 
 | ID | Category | Description |
 |:---|:---|:---|
@@ -375,6 +397,21 @@ git push   # ← Actions automatically runs all 170 tests
 | TC-V23 | Content | Invalid subscription day handled |
 | TC-V24 | Content | Platform fee without orderId handled |
 | TC-V25 | Content | Unknown farmer-payment-info handled |
+| TC-V26 | Security | Signup with SQL injection in name is sanitized |
+| TC-V27 | Security | Signup with XSS payload in name is sanitized |
+| TC-V28 | Security | Product with XSS in name is handled gracefully |
+| TC-V29 | Security | Community post with script tag is handled |
+| TC-V30 | Concurrency | Concurrent duplicate signups with same email handled |
+| TC-V31 | Stability | Rapid GET /api/health 10x returns 200 every time |
+| TC-V32 | Numeric | Payment with string amount is handled |
+| TC-V33 | Numeric | Payment with extremely large amount is handled |
+| TC-V34 | Numeric | Payment with invalid method type is handled |
+| TC-V35 | Subscriptions | Subscription without quantity is handled |
+| TC-V36 | Numeric | Quote with negative offerPrice is handled |
+| TC-V37 | Numeric | Quote update with invalid status value is handled |
+| TC-V38 | URL Encoding | GET with URL-encoded special characters in query param |
+| TC-V39 | Non-existent | GET /api/users/:id with alphanumeric non-ID returns 404 |
+| TC-V40 | Content | Very long string in community message is handled |
 
 ---
 
@@ -407,11 +444,12 @@ After successful GitHub Actions run:
 ```
 ✅ Selenium Web   : 50 / 50  PASSED
 ✅ Appium Android : 50 / 50  PASSED
-✅ Unit Tests     : 30 / 30  PASSED
-✅ Validation     : 25 / 25  PASSED
+✅ Unit Tests     : 50 / 50  PASSED
+✅ Validation     : 40 / 40  PASSED
 ✅ Deployment     : 15 / 15  PASSED
+✅ Load Testing   : 4 / 4  PASSED
 ─────────────────────────────────────
-🎉 170 / 170 PASSED — READY TO DEPLOY
+🎉 209 / 209 PASSED — READY TO DEPLOY
 ```
 
 | Report | Location |
