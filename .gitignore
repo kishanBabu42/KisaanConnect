@@ -40,6 +40,10 @@ test_script_*.js
 # ── Logs ──────────────────────────────────────────────────────────────────
 *.log
 npm-debug.log*
+load-tests/reports/
+load-tests/server.log
+load-tests/_check.js
+load-tests/_diag.js
 
 # ── OS ────────────────────────────────────────────────────────────────────
 .DS_Store
