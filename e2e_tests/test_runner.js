@@ -86,7 +86,7 @@ function main() {
         { name:'Unit Tests',      file:'Unit_Report.csv',        icon:'🔬', expected:50 },
         { name:'Validation',      file:'Validation_Report.csv',  icon:'✅', expected:40 },
         { name:'Deployment',      file:'Deployment_Report.csv',  icon:'🚀', expected:15 },
-        { name:'Load Testing',    file:'Load_Report.csv',        icon:'📊', expected:4 },
+        { name:'Load Testing',    file:'Load_Report.csv',        icon:'📊', expected:100 },
     ];
 
     const allRows = [];

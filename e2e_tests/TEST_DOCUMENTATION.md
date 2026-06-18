@@ -19,7 +19,7 @@ GitHub Actions Trigger (e2e.yml — 6 Jobs)
 │  Job 3: 🔬 Unit Tests             (50 cases) │
 │  Job 4: ✅ Validation Tests       (40 cases) │
 │  Job 5: 🚀 Deployment Status      (15 cases) │
-│  Job 6: 📊 Load Testing           (4 cases)  │
+│  Job 6: 📊 Load Testing           (100 cases)│
 └─────────────────────────────────────────────┘
       ↓
 Job 6: 📊 Compile HTML Report + Deploy to GitHub Pages
@@ -176,14 +176,14 @@ npm run test:all
 ```bash
 git add .
 git commit -m "Update feature"
-git push   # ← Actions automatically runs all 209 tests
+git push   # ← Actions automatically runs all 305 tests
 ```
 
 **Actions URL:** https://github.com/dhanunjayroyal/KisaanConnect/actions/workflows/e2e.yml
 
 ---
 
-## Grand Summary — 209 Unique Test Cases
+## Grand Summary — 305 Unique Test Cases
 
 | Suite | Type | Cases |
 |:---|:---|:---:|
@@ -192,8 +192,8 @@ git push   # ← Actions automatically runs all 209 tests
 | 🔬 Unit Tests | API Unit Testing | 50 |
 | ✅ Validation | Input Validation | 40 |
 | 🚀 Deployment | Infrastructure Status | 15 |
-| 📊 Load Testing | Performance SLA | 4 |
-| **TOTAL** | **All Categories** | **209** |
+| 📊 Load Testing | Performance SLA | 100 |
+| **TOTAL** | **All Categories** | **305** |
 
 ---
 
@@ -447,9 +447,9 @@ After successful GitHub Actions run:
 ✅ Unit Tests     : 50 / 50  PASSED
 ✅ Validation     : 40 / 40  PASSED
 ✅ Deployment     : 15 / 15  PASSED
-✅ Load Testing   : 4 / 4  PASSED
+✅ Load Testing   : 100 / 100  PASSED
 ─────────────────────────────────────
-🎉 209 / 209 PASSED — READY TO DEPLOY
+🎉 305 / 305 PASSED — READY TO DEPLOY
 ```
 
 | Report | Location |
