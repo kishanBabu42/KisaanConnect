@@ -59,6 +59,15 @@
             return global.KISAAN_API_URL;
         }
 
+        // Priority 0.5: Fallback to production Render URL if running on a hosted public web domain
+        try {
+            const hostname = global.location.hostname;
+            if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1' && 
+                !/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)) {
+                return 'https://kisaanconnect-api.onrender.com/api';
+            }
+        } catch (e) { /* location unavailable */ }
+
         // Priority 1: Android native interface
         if (global.Android && typeof global.Android.getServerUrl === 'function') {
             return global.Android.getServerUrl();

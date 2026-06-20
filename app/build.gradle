@@ -1,6 +1,10 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+    id 'androidx.navigation.safeargs.kotlin'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -11,72 +15,149 @@ android {
         applicationId "com.kisaanconnect"
         minSdk 24
         targetSdk 34
-        versionCode 10
-        versionName "1.9"
-
+        versionCode 21
+        versionName "2.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Room schema export
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas"]
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            buildConfigField "String", "BASE_URL", '"https://kisaanconnect-api.onrender.com"'
+            buildConfigField "String", "API_VERSION", '"v1"'
+            debuggable true
+        }
         release {
-            minifyEnabled = false
+            buildConfigField "String", "BASE_URL", '"https://kisaanconnect-api.onrender.com"'
+            buildConfigField "String", "API_VERSION", '"v1"'
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-    buildFeatures {
-        viewBinding = false
-    }
-    lint {
-        disable 'MissingTranslation', 'ExtraTranslation'
-        abortOnError = false
-    }
-}
 
-configurations {
-    all {
-        resolutionStrategy {
-            // Force consistent versions to resolve conflicts
-            force 'com.google.android.gms:play-services-base:18.2.0'
-            force 'com.google.android.gms:play-services-basement:18.2.0'
-            force 'com.google.android.gms:play-services-tasks:18.1.0'
-            force 'androidx.appcompat:appcompat:1.6.1'
-            force 'com.google.android.material:material:1.11.0'
-        }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+        dataBinding = true
+    }
+
+    lint {
+        abortOnError = false
+        disable 'MissingTranslation', 'ExtraTranslation'
     }
 }
 
 dependencies {
+    // Core Android
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.activity:activity-ktx:1.8.2'
+    implementation 'androidx.fragment:fragment-ktx:1.6.2'
     implementation 'androidx.core:core-splashscreen:1.0.1'
 
+    // Material Design 3
+    implementation 'com.google.android.material:material:1.11.0'
+
+    // ConstraintLayout & other layouts
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+
+    // Navigation Component
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.6'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.7.6'
+
+    // Lifecycle (ViewModel + LiveData + Flow)
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+
+    // Room Database
+    implementation 'androidx.room:room-runtime:2.6.1'
+    implementation 'androidx.room:room-ktx:2.6.1'
+    kapt 'androidx.room:room-compiler:2.6.1'
+
+    // Retrofit + OkHttp
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+
+    // Coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+
+    // Firebase BOM
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-messaging-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
 
     // Google Sign-In
-    implementation 'com.google.android.gms:play-services-auth:21.2.0'
-    
-    // Dependency constraints to resolve conflicts
-    constraints {
-        implementation 'com.google.android.gms:play-services-base:18.2.0'
-        implementation 'com.google.android.gms:play-services-basement:18.2.0'
-        implementation 'com.google.android.gms:play-services-tasks:18.1.0'
-        implementation 'androidx.appcompat:appcompat:1.6.1'
-        implementation 'com.google.android.material:material:1.11.0'
-        implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-        implementation 'com.google.code.gson:gson:2.8.9'
-    }
+    implementation 'com.google.android.gms:play-services-auth:21.0.0'
 
+    // Coil for image loading
+    implementation 'io.coil-kt:coil:2.5.0'
+    implementation 'io.coil-kt:coil-svg:2.5.0'
+
+    // DataStore (replace SharedPreferences)
+    implementation 'androidx.datastore:datastore-preferences:1.0.0'
+
+    // Paging 3
+    implementation 'androidx.paging:paging-runtime-ktx:3.2.1'
+
+    // ViewPager2 + Indicators
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation 'me.relex:circleindicator:2.1.6'
+
+    // Lottie animations
+    implementation 'com.airbnb.android:lottie:6.3.0'
+
+    // Shimmer loading effect
+    implementation 'com.facebook.shimmer:shimmer:0.5.0'
+
+    // MPAndroidChart
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    // Image Cropper
+    implementation 'com.github.CanHub:Android-Image-Cropper:4.5.0'
+
+    // Bottom Navigation provided by Material3 BottomNavigationView — no extra lib needed
+
+    // OTP input handled via standard TextInputEditText — no extra lib needed
+
+    // Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // Work Manager
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+
+    // RecyclerView
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+    // CardView
+    implementation 'androidx.cardview:cardview:1.0.0'
+
+    // Testing
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'androidx.room:room-testing:2.6.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

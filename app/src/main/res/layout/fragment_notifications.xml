@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:colorBackground">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        app:title="Notifications 🔔"
+        app:titleTextAppearance="@style/TextStyle.Title">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMarkAll"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp"
+            android:text="Mark All Read"
+            android:textSize="12sp" />
+    </com.google.android.material.appbar.MaterialToolbar>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="?attr/colorOutlineVariant" />
+
+    <com.facebook.shimmer.ShimmerFrameLayout
+        android:id="@+id/shimmer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:padding="16dp">
+            <View android:layout_width="match_parent" android:layout_height="70dp"
+                android:background="@color/neutral_200" android:layout_marginBottom="8dp" />
+            <View android:layout_width="match_parent" android:layout_height="70dp"
+                android:background="@color/neutral_200" android:layout_marginBottom="8dp" />
+            <View android:layout_width="match_parent" android:layout_height="70dp"
+                android:background="@color/neutral_200" />
+        </LinearLayout>
+    </com.facebook.shimmer.ShimmerFrameLayout>
+
+    <TextView
+        android:id="@+id/tvEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="🔔 No notifications yet\nWe'll notify you about orders and bids"
+        android:gravity="center"
+        android:textSize="15sp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:lineSpacingMultiplier="1.6"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvNotifications"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+</LinearLayout>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?android:colorBackground">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:title="🤖 KisaanAI"
+        app:subtitle="Your smart farming assistant"
+        app:titleTextColor="#FFFFFF"
+        app:subtitleTextColor="#CCFFFFFF"
+        app:navigationIcon="@android:drawable/ic_media_previous"
+        app:navigationIconTint="#FFFFFF">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnClear"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp"
+            android:text="Clear"
+            android:textColor="#CCFFFFFF"
+            android:textSize="13sp" />
+    </com.google.android.material.appbar.MaterialToolbar>
+
+    <!-- Suggestion Chips -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp"
+        android:background="?attr/colorSurface">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipDisease"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="🦠 Disease help"
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_marginEnd="8dp" />
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipWeather"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="🌤 Weather tips"
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_marginEnd="8dp" />
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="💰 Price advice"
+                style="@style/Widget.Material3.Chip.Suggestion"
+                android:layout_marginEnd="8dp" />
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipFertilizer"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="🌱 Fertilizer tips"
+                style="@style/Widget.Material3.Chip.Suggestion" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Messages -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Welcome State -->
+        <LinearLayout
+            android:id="@+id/tvWelcome"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="32dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="🌾" android:textSize="56sp" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Hello! I'm KisaanAI"
+                android:textSize="22sp" android:textStyle="bold"
+                android:textColor="?attr/colorOnBackground" android:fontFamily="sans-serif-medium"
+                android:layout_marginTop="16dp" android:gravity="center" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Ask me anything about farming — crop diseases, weather, pricing, fertilizers, and more!"
+                android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant"
+                android:gravity="center" android:lineSpacingMultiplier="1.5"
+                android:layout_marginTop="10dp" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMessages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingVertical="8dp"
+            android:clipToPadding="false" />
+    </FrameLayout>
+
+    <!-- Typing Indicator -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/typingIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:visibility="gone"
+        app:indicatorColor="?attr/colorPrimary" />
+
+    <!-- Input Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="?attr/colorSurface"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp"
+        android:gravity="center_vertical"
+        android:elevation="8dp">
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:boxCornerRadiusTopStart="24dp" app:boxCornerRadiusTopEnd="24dp"
+            app:boxCornerRadiusBottomStart="24dp" app:boxCornerRadiusBottomEnd="24dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etMessage"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Ask KisaanAI…"
+                android:inputType="textMultiLine|textCapSentences"
+                android:imeOptions="actionSend"
+                android:maxLines="4" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSend"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:padding="0dp"
+            app:icon="@android:drawable/ic_menu_send"
+            style="@style/Widget.Material3.Button.Icon"
+            app:cornerRadius="26dp"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+</LinearLayout>

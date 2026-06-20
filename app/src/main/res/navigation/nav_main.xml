@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_main"
+    app:startDestination="@id/homeFragment">
+
+    <!-- Bottom Nav Destinations -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.kisaanconnect.ui.home.HomeFragment"
+        android:label="Home">
+        <action android:id="@+id/action_homeFragment_to_productDetailFragment"
+            app:destination="@id/productDetailFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left" app:popExitAnim="@anim/slide_out_right">
+            <argument android:name="productId" app:argType="integer" android:defaultValue="-1" />
+        </action>
+        <action android:id="@+id/action_homeFragment_to_productListFragment"
+            app:destination="@id/productListFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left" />
+        <action android:id="@+id/action_homeFragment_to_searchFragment"
+            app:destination="@id/searchFragment" />
+        <action android:id="@+id/action_homeFragment_to_notificationsFragment"
+            app:destination="@id/notificationsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/categoriesFragment"
+        android:name="com.kisaanconnect.ui.home.HomeFragment"
+        android:label="Categories" />
+
+    <fragment
+        android:id="@+id/cartFragment"
+        android:name="com.kisaanconnect.ui.cart.CartFragment"
+        android:label="Cart">
+        <action android:id="@+id/action_cartFragment_to_checkoutFragment"
+            app:destination="@id/checkoutFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/ordersFragment"
+        android:name="com.kisaanconnect.ui.orders.OrderHistoryFragment"
+        android:label="Orders">
+        <action android:id="@+id/action_ordersFragment_to_orderDetailFragment"
+            app:destination="@id/orderDetailFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left">
+            <argument android:name="orderId" app:argType="integer" android:defaultValue="-1" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.kisaanconnect.ui.profile.ProfileFragment"
+        android:label="Profile">
+        <action android:id="@+id/action_profileFragment_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
+        <action android:id="@+id/action_profileFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+        <action android:id="@+id/action_profileFragment_to_helpFragment"
+            app:destination="@id/helpFragment" />
+        <action android:id="@+id/action_profileFragment_to_aiChatFragment"
+            app:destination="@id/aiChatFragment" />
+    </fragment>
+
+    <!-- Nested Destinations -->
+    <fragment
+        android:id="@+id/productListFragment"
+        android:name="com.kisaanconnect.ui.products.ProductListFragment"
+        android:label="Products">
+        <action android:id="@+id/action_productListFragment_to_productDetailFragment"
+            app:destination="@id/productDetailFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left">
+            <argument android:name="productId" app:argType="integer" android:defaultValue="-1" />
+        </action>
+    </fragment>
+
+    <fragment
+        android:id="@+id/productDetailFragment"
+        android:name="com.kisaanconnect.ui.products.ProductDetailFragment"
+        android:label="Product Details">
+        <argument android:name="productId" app:argType="integer" android:defaultValue="-1" />
+        <action android:id="@+id/action_productDetailFragment_to_cartFragment"
+            app:destination="@id/cartFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.kisaanconnect.ui.products.ProductListFragment"
+        android:label="Search" />
+
+    <fragment
+        android:id="@+id/checkoutFragment"
+        android:name="com.kisaanconnect.ui.cart.CartFragment"
+        android:label="Checkout">
+        <action android:id="@+id/action_checkoutFragment_to_orderSuccessFragment"
+            app:destination="@id/orderSuccessFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/orderDetailFragment"
+        android:name="com.kisaanconnect.ui.orders.OrderHistoryFragment"
+        android:label="Order Details">
+        <argument android:name="orderId" app:argType="integer" android:defaultValue="-1" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/orderSuccessFragment"
+        android:name="com.kisaanconnect.ui.orders.OrderHistoryFragment"
+        android:label="Order Placed!" />
+
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="com.kisaanconnect.ui.notifications.NotificationsFragment"
+        android:label="Notifications" />
+
+    <fragment
+        android:id="@+id/aiChatFragment"
+        android:name="com.kisaanconnect.ui.chat.AiChatFragment"
+        android:label="KisaanAI" />
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.kisaanconnect.ui.profile.ProfileFragment"
+        android:label="Edit Profile" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.kisaanconnect.ui.profile.ProfileFragment"
+        android:label="Settings" />
+
+    <fragment
+        android:id="@+id/helpFragment"
+        android:name="com.kisaanconnect.ui.profile.ProfileFragment"
+        android:label="Help &amp; Support" />
+
+</navigation>

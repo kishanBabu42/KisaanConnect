@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_farmer"
+    app:startDestination="@id/farmerHomeFragment">
+
+    <fragment
+        android:id="@+id/farmerHomeFragment"
+        android:name="com.kisaanconnect.ui.farmer.FarmerHomeFragment"
+        android:label="Dashboard">
+        <action android:id="@+id/action_farmerHomeFragment_to_addProductFragment"
+            app:destination="@id/addProductFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left" app:popExitAnim="@anim/slide_out_right" />
+        <action android:id="@+id/action_farmerHomeFragment_to_aiChatFragment"
+            app:destination="@id/aiChatFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left" />
+        <action android:id="@+id/action_farmerHomeFragment_to_workPlannerFragment"
+            app:destination="@id/workPlannerFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/farmerProductsFragment"
+        android:name="com.kisaanconnect.ui.farmer.FarmerHomeFragment"
+        android:label="My Crops">
+        <action android:id="@+id/action_farmerProductsFragment_to_addProductFragment"
+            app:destination="@id/addProductFragment"
+            app:enterAnim="@anim/slide_in_right" app:exitAnim="@anim/slide_out_left" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/farmerBidsFragment"
+        android:name="com.kisaanconnect.ui.farmer.FarmerHomeFragment"
+        android:label="Bids" />
+
+    <fragment
+        android:id="@+id/farmerEarningsFragment"
+        android:name="com.kisaanconnect.ui.farmer.FarmerHomeFragment"
+        android:label="Earnings" />
+
+    <fragment
+        android:id="@+id/farmerProfileFragment"
+        android:name="com.kisaanconnect.ui.profile.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/addProductFragment"
+        android:name="com.kisaanconnect.ui.farmer.AddProductFragment"
+        android:label="Add Crop" />
+
+    <fragment
+        android:id="@+id/aiChatFragment"
+        android:name="com.kisaanconnect.ui.chat.AiChatFragment"
+        android:label="KisaanAI" />
+
+    <fragment
+        android:id="@+id/workPlannerFragment"
+        android:name="com.kisaanconnect.ui.farmer.FarmerHomeFragment"
+        android:label="Work Planner" />
+
+</navigation>
