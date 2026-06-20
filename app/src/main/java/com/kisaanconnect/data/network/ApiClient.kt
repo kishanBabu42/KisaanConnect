@@ -1,7 +1,11 @@
 package com.kisaanconnect.data.network
 
 import android.content.Context
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializer
 import com.kisaanconnect.BuildConfig
+import com.kisaanconnect.data.models.AuthResponse
+import com.kisaanconnect.data.models.User
 import com.kisaanconnect.utils.PrefsManager
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -62,10 +66,37 @@ object ApiClient {
             .retryOnConnectionFailure(true)
             .build()
 
+        val gson = GsonBuilder()
+            .registerTypeAdapter(AuthResponse::class.java, JsonDeserializer<AuthResponse> { json, _, context ->
+                try {
+                    val jsonObject = json.asJsonObject
+                    if (jsonObject.has("success")) {
+                        val success = jsonObject.get("success").asBoolean
+                        val message = if (jsonObject.has("message") && !jsonObject.get("message").isJsonNull) jsonObject.get("message").asString else null
+                        val token = if (jsonObject.has("token") && !jsonObject.get("token").isJsonNull) jsonObject.get("token").asString else null
+                        val user = if (jsonObject.has("user") && !jsonObject.get("user").isJsonNull) {
+                            context.deserialize<User>(jsonObject.get("user"), User::class.java)
+                        } else {
+                            null
+                        }
+                        AuthResponse(success, message, token, user)
+                    } else if (jsonObject.has("id") || jsonObject.has("email")) {
+                        val user = context.deserialize<User>(json, User::class.java)
+                        val token = "session_token_" + user.id
+                        AuthResponse(success = true, message = "Success", token = token, user = user)
+                    } else {
+                        AuthResponse()
+                    }
+                } catch (e: Exception) {
+                    AuthResponse(success = false, message = e.message)
+                }
+            })
+            .create()
+
         return Retrofit.Builder()
             .baseUrl(BuildConfig.BASE_URL + "/")
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(ApiService::class.java)
     }
