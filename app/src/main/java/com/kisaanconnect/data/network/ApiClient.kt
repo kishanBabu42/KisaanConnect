@@ -16,9 +16,9 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    private const val CONNECT_TIMEOUT = 30L
-    private const val READ_TIMEOUT = 30L
-    private const val WRITE_TIMEOUT = 30L
+    private const val CONNECT_TIMEOUT = 60L
+    private const val READ_TIMEOUT = 60L
+    private const val WRITE_TIMEOUT = 60L
 
     private lateinit var prefs: PrefsManager
     private var _service: ApiService? = null

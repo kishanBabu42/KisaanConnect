@@ -306,8 +306,8 @@ app.get('/api/db-status', async (req, res) => {
 
 // ── APK DOWNLOAD / INSTALL PAGE ──────────────────────────────────────────────
 const _apkFile    = path.join(__dirname, 'app-release.apk');
-const _apkVersion = '2.2';
-const _apkBuild   = 22;
+const _apkVersion = '2.3';
+const _apkBuild   = 23;
 
 app.get('/install', (req, res) => {
     const apkExists = fs.existsSync(_apkFile);
