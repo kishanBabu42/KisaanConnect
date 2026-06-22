@@ -369,42 +369,86 @@
         if (document.getElementById('kisaan-offline-banner')) return;
         const banner = document.createElement('div');
         banner.id = 'kisaan-offline-banner';
-        banner.style.cssText = `
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999;
-            background: linear-gradient(90deg, #dc2626, #ef4444);
-            color: white; padding: 14px 20px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 700; font-size: 13px;
-            display: flex; align-items: center; gap: 12px;
-            box-shadow: 0 -4px 20px rgba(220,38,38,0.4);
-            animation: kisaan-slideUp 0.4s ease;
-        `;
-        banner.innerHTML = `
-            <style>@keyframes kisaan-slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }</style>
-            <span style="font-size:20px;">📵</span>
-            <div style="flex:1;">
-                <div>Cannot reach KisaanConnect server</div>
-                <div style="font-weight:500;font-size:11px;opacity:0.85;">
-                    Make sure your PC and phone are on the <strong>same Wi-Fi</strong>.
-                    Open <strong id="kisaan-server-hint">http://YOUR-PC-IP:${PORT}</strong> in mobile browser.
+        
+        const isHosted = (function() {
+            try {
+                const hostname = global.location.hostname;
+                return hostname && hostname !== 'localhost' && hostname !== '127.0.0.1' && 
+                       !/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname);
+            } catch (e) { return false; }
+        })();
+
+        if (isHosted) {
+            banner.style.cssText = `
+                position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999;
+                background: linear-gradient(90deg, #0284c7, #0ea5e9);
+                color: white; padding: 14px 20px;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-weight: 700; font-size: 13px;
+                display: flex; align-items: center; gap: 12px;
+                box-shadow: 0 -4px 20px rgba(14,165,233,0.4);
+                animation: kisaan-slideUp 0.4s ease;
+            `;
+            banner.innerHTML = `
+                <style>
+                    @keyframes kisaan-slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                    @keyframes kisaan-spin { to { transform: rotate(360deg); } }
+                </style>
+                <div style="width:20px; height:20px; border:3px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:white; animation: kisaan-spin 1s linear infinite;"></div>
+                <div style="flex:1;">
+                    <div>Waking up cloud database server...</div>
+                    <div style="font-weight:500;font-size:11px;opacity:0.85;">
+                        The free Render database server sleeps when inactive. Waking it up takes ~45 seconds. Thank you for your patience!
+                    </div>
                 </div>
-            </div>
-            <button onclick="KisaanNetwork.promptManualIp()" style="
-                background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.4);
-                color:white; padding:8px 14px; border-radius:10px; cursor:pointer;
-                font-weight:700; font-size:12px; white-space:nowrap;">
-                Set IP
-            </button>
-            <button onclick="KisaanNetwork.retryConnection()" style="
-                background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.4);
-                color:white; padding:8px 14px; border-radius:10px; cursor:pointer;
-                font-weight:700; font-size:12px; white-space:nowrap;">
-                🔄 Retry
-            </button>
-            <button onclick="document.getElementById('kisaan-offline-banner').remove()" style="
-                background:transparent; border:none; color:rgba(255,255,255,0.7);
-                cursor:pointer; font-size:18px; padding:4px 8px;">✕</button>
-        `;
+                <button onclick="KisaanNetwork.retryConnection()" style="
+                    background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.4);
+                    color:white; padding:8px 14px; border-radius:10px; cursor:pointer;
+                    font-weight:700; font-size:12px; white-space:nowrap;">
+                    🔄 Retry
+                </button>
+                <button onclick="document.getElementById('kisaan-offline-banner').remove()" style="
+                    background:transparent; border:none; color:rgba(255,255,255,0.7);
+                    cursor:pointer; font-size:18px; padding:4px 8px;">✕</button>
+            `;
+        } else {
+            banner.style.cssText = `
+                position: fixed; bottom: 0; left: 0; right: 0; z-index: 99999;
+                background: linear-gradient(90deg, #dc2626, #ef4444);
+                color: white; padding: 14px 20px;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-weight: 700; font-size: 13px;
+                display: flex; align-items: center; gap: 12px;
+                box-shadow: 0 -4px 20px rgba(220,38,38,0.4);
+                animation: kisaan-slideUp 0.4s ease;
+            `;
+            banner.innerHTML = `
+                <style>@keyframes kisaan-slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }</style>
+                <span style="font-size:20px;">📵</span>
+                <div style="flex:1;">
+                    <div>Cannot reach KisaanConnect server</div>
+                    <div style="font-weight:500;font-size:11px;opacity:0.85;">
+                        Make sure your PC and phone are on the <strong>same Wi-Fi</strong>.
+                        Open <strong id="kisaan-server-hint">http://YOUR-PC-IP:${PORT}</strong> in mobile browser.
+                    </div>
+                </div>
+                <button onclick="KisaanNetwork.promptManualIp()" style="
+                    background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.4);
+                    color:white; padding:8px 14px; border-radius:10px; cursor:pointer;
+                    font-weight:700; font-size:12px; white-space:nowrap;">
+                    Set IP
+                </button>
+                <button onclick="KisaanNetwork.retryConnection()" style="
+                    background:rgba(255,255,255,0.2); border:1.5px solid rgba(255,255,255,0.4);
+                    color:white; padding:8px 14px; border-radius:10px; cursor:pointer;
+                    font-weight:700; font-size:12px; white-space:nowrap;">
+                    🔄 Retry
+                </button>
+                <button onclick="document.getElementById('kisaan-offline-banner').remove()" style="
+                    background:transparent; border:none; color:rgba(255,255,255,0.7);
+                    cursor:pointer; font-size:18px; padding:4px 8px;">✕</button>
+            `;
+        }
         document.body.appendChild(banner);
     }
 
