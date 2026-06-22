@@ -5,9 +5,9 @@ TC-D003,Deployment,Infrastructure,Static file index.html is served,PASS,Status: 
 TC-D004,Deployment,Infrastructure,Static file farmer-dashboard.html is served,PASS,Status: 200
 TC-D005,Deployment,Infrastructure,Static file customer-dashboard.html is served,PASS,Status: 200
 TC-D006,Deployment,Infrastructure,Admin login page is served,PASS,Status: 200
-TC-D007,Deployment,Infrastructure,Admin API authentication works in production,PASS,"{""id"":1,""createdAt"":""2026-06-19T04:31:33.327Z"",""wallet"":0,""n"
-TC-D008,Deployment,Infrastructure,Database connection is live,PASS,User count: 1
-TC-D009,Deployment,Infrastructure,Products API is operational,PASS,Product count: 126
+TC-D007,Deployment,Infrastructure,Admin API authentication works in production,PASS,"{""id"":1,""createdAt"":""2026-06-22T02:47:57.543Z"",""wallet"":0,""n"
+TC-D008,Deployment,Infrastructure,Database connection is live,PASS,User count: 131
+TC-D009,Deployment,Infrastructure,Products API is operational,PASS,Product count: 120
 TC-D010,Deployment,Infrastructure,Service worker file (sw.js) is accessible,PASS,Status: 200
 TC-D011,Deployment,Infrastructure,Render backend URL reachable (if configured),PASS,SKIPPED
 TC-D012,Deployment,Infrastructure,Vercel frontend URL reachable (if configured),PASS,SKIPPED

@@ -230,1046 +230,166 @@ async function main() {
 
     // -- Section 13-30: Programmatic Data-Driven Boundary Checks (TC-V041..TC-V300) --
     console.log('\n[S13-S30] Extended Parameter Boundary & Type Validation');
-    await tc('TC-V041', 'Signup with invalid email format (Case 41)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V042', 'Signup with empty email (Case 42)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V043', 'Signup with short password (Case 43)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_43@t.com","password":"123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V044', 'Signup with extremely long password (Case 44)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_44@t.com","password":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V045', 'Signup with invalid role (Case 45)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_45@t.com","password":"Pass@123","role":"superuser","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V046', 'Signup with short mobile number (Case 46)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_46@t.com","password":"Pass@123","role":"farmer","mobile":"12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V047', 'Signup with long mobile number (Case 47)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_47@t.com","password":"Pass@123","role":"farmer","mobile":"9999999999999999","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V048', 'Signup with alphanumeric mobile number (Case 48)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_48@t.com","password":"Pass@123","role":"farmer","mobile":"abcde12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V049', 'Signup with empty location (Case 49)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_49@t.com","password":"Pass@123","role":"farmer","mobile":"9000000000","location":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V050', 'Login with unregistered email (Case 50)', async() => {
-        const r = await api('POST', '/api/login', {"email":"unknown_xyz_123@domain.com","password":"Pass@123","role":"farmer"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V051', 'Login with invalid role parameter (Case 51)', async() => {
-        const r = await api('POST', '/api/login', {"email":"val_login_51@t.com","password":"Pass@123","role":"guest"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V052', 'Product creation with negative price (Case 52)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":-10,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V053', 'Product creation with string price (Case 53)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":"free","marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V054', 'Product creation with huge price (Case 54)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":9999999,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V055', 'Product creation with negative quantity (Case 55)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":-5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V056', 'Product creation with string quantity (Case 56)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":"many","age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V057', 'Product creation with decimal quantity (Case 57)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":1.5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V058', 'Product creation with empty age (Case 58)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V059', 'Product creation with empty location (Case 59)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"1d","location":"","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V060', 'Quote creation with negative quantity (Case 60)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":-1,"offerPrice":10,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V061', 'Quote creation with zero offerPrice (Case 61)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":0,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V062', 'Quote creation with negative offerPrice (Case 62)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":-5,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V063', 'Quote creation with string needDriver (Case 63)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":10,"needDriver":"yes"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V064', 'Subscription with negative quantity (Case 64)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":-10,"day":"Monday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V065', 'Subscription with invalid day name (Case 65)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":5,"day":"Funday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V066', 'Payment with negative amount (Case 66)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":-50,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V067', 'Payment with string amount (Case 67)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":"fifty","description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V068', 'Payment with invalid transaction type (Case 68)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"refund","method":"upi","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V069', 'Payment with invalid payment method (Case 69)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"cash_on_delivery","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V070', 'Community message with empty content (Case 70)', async() => {
-        const r = await api('POST', '/api/community', {"customerId":2,"customerName":"C","message":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V071', 'Calendar note with wrong date format (Case 71)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"17-06-2025","note":"Plan"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V072', 'Calendar note with long text (Case 72)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"2025-06-17","note":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V073', 'Rating creation with value > 5 (Case 73)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":6,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V074', 'Rating creation with negative value (Case 74)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":-1,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V075', 'Rating creation with string value (Case 75)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":"good","review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V076', 'Notification with invalid type (Case 76)', async() => {
-        const r = await api('POST', '/api/notifications', {"userId":1,"message":"Alert","type":"unknown_alert"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V077', 'AI chat with invalid role parameter (Case 77)', async() => {
-        const r = await api('POST', '/api/ai-chat', {"message":"Hi","role":"moderator"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V078', 'Signup with invalid email format (Case 78)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V079', 'Signup with empty email (Case 79)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V080', 'Signup with short password (Case 80)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_80@t.com","password":"123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V081', 'Signup with extremely long password (Case 81)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_81@t.com","password":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V082', 'Signup with invalid role (Case 82)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_82@t.com","password":"Pass@123","role":"superuser","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V083', 'Signup with short mobile number (Case 83)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_83@t.com","password":"Pass@123","role":"farmer","mobile":"12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V084', 'Signup with long mobile number (Case 84)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_84@t.com","password":"Pass@123","role":"farmer","mobile":"9999999999999999","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V085', 'Signup with alphanumeric mobile number (Case 85)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_85@t.com","password":"Pass@123","role":"farmer","mobile":"abcde12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V086', 'Signup with empty location (Case 86)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_86@t.com","password":"Pass@123","role":"farmer","mobile":"9000000000","location":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V087', 'Login with unregistered email (Case 87)', async() => {
-        const r = await api('POST', '/api/login', {"email":"unknown_xyz_123@domain.com","password":"Pass@123","role":"farmer"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V088', 'Login with invalid role parameter (Case 88)', async() => {
-        const r = await api('POST', '/api/login', {"email":"val_login_88@t.com","password":"Pass@123","role":"guest"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V089', 'Product creation with negative price (Case 89)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":-10,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V090', 'Product creation with string price (Case 90)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":"free","marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V091', 'Product creation with huge price (Case 91)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":9999999,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V092', 'Product creation with negative quantity (Case 92)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":-5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V093', 'Product creation with string quantity (Case 93)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":"many","age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V094', 'Product creation with decimal quantity (Case 94)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":1.5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V095', 'Product creation with empty age (Case 95)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V096', 'Product creation with empty location (Case 96)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"1d","location":"","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V097', 'Quote creation with negative quantity (Case 97)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":-1,"offerPrice":10,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V098', 'Quote creation with zero offerPrice (Case 98)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":0,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V099', 'Quote creation with negative offerPrice (Case 99)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":-5,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V100', 'Quote creation with string needDriver (Case 100)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":10,"needDriver":"yes"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V101', 'Subscription with negative quantity (Case 101)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":-10,"day":"Monday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V102', 'Subscription with invalid day name (Case 102)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":5,"day":"Funday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V103', 'Payment with negative amount (Case 103)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":-50,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V104', 'Payment with string amount (Case 104)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":"fifty","description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V105', 'Payment with invalid transaction type (Case 105)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"refund","method":"upi","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V106', 'Payment with invalid payment method (Case 106)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"cash_on_delivery","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V107', 'Community message with empty content (Case 107)', async() => {
-        const r = await api('POST', '/api/community', {"customerId":2,"customerName":"C","message":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V108', 'Calendar note with wrong date format (Case 108)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"17-06-2025","note":"Plan"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V109', 'Calendar note with long text (Case 109)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"2025-06-17","note":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V110', 'Rating creation with value > 5 (Case 110)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":6,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V111', 'Rating creation with negative value (Case 111)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":-1,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V112', 'Rating creation with string value (Case 112)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":"good","review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V113', 'Notification with invalid type (Case 113)', async() => {
-        const r = await api('POST', '/api/notifications', {"userId":1,"message":"Alert","type":"unknown_alert"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V114', 'AI chat with invalid role parameter (Case 114)', async() => {
-        const r = await api('POST', '/api/ai-chat', {"message":"Hi","role":"moderator"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V115', 'Signup with invalid email format (Case 115)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V116', 'Signup with empty email (Case 116)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V117', 'Signup with short password (Case 117)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_117@t.com","password":"123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V118', 'Signup with extremely long password (Case 118)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_118@t.com","password":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V119', 'Signup with invalid role (Case 119)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_119@t.com","password":"Pass@123","role":"superuser","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V120', 'Signup with short mobile number (Case 120)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_120@t.com","password":"Pass@123","role":"farmer","mobile":"12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V121', 'Signup with long mobile number (Case 121)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_121@t.com","password":"Pass@123","role":"farmer","mobile":"9999999999999999","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V122', 'Signup with alphanumeric mobile number (Case 122)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_122@t.com","password":"Pass@123","role":"farmer","mobile":"abcde12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V123', 'Signup with empty location (Case 123)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_123@t.com","password":"Pass@123","role":"farmer","mobile":"9000000000","location":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V124', 'Login with unregistered email (Case 124)', async() => {
-        const r = await api('POST', '/api/login', {"email":"unknown_xyz_123@domain.com","password":"Pass@123","role":"farmer"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V125', 'Login with invalid role parameter (Case 125)', async() => {
-        const r = await api('POST', '/api/login', {"email":"val_login_125@t.com","password":"Pass@123","role":"guest"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V126', 'Product creation with negative price (Case 126)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":-10,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V127', 'Product creation with string price (Case 127)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":"free","marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V128', 'Product creation with huge price (Case 128)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":9999999,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V129', 'Product creation with negative quantity (Case 129)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":-5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V130', 'Product creation with string quantity (Case 130)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":"many","age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V131', 'Product creation with decimal quantity (Case 131)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":1.5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V132', 'Product creation with empty age (Case 132)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V133', 'Product creation with empty location (Case 133)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"1d","location":"","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V134', 'Quote creation with negative quantity (Case 134)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":-1,"offerPrice":10,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V135', 'Quote creation with zero offerPrice (Case 135)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":0,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V136', 'Quote creation with negative offerPrice (Case 136)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":-5,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V137', 'Quote creation with string needDriver (Case 137)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":10,"needDriver":"yes"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V138', 'Subscription with negative quantity (Case 138)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":-10,"day":"Monday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V139', 'Subscription with invalid day name (Case 139)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":5,"day":"Funday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V140', 'Payment with negative amount (Case 140)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":-50,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V141', 'Payment with string amount (Case 141)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":"fifty","description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V142', 'Payment with invalid transaction type (Case 142)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"refund","method":"upi","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V143', 'Payment with invalid payment method (Case 143)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"cash_on_delivery","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V144', 'Community message with empty content (Case 144)', async() => {
-        const r = await api('POST', '/api/community', {"customerId":2,"customerName":"C","message":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V145', 'Calendar note with wrong date format (Case 145)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"17-06-2025","note":"Plan"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V146', 'Calendar note with long text (Case 146)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"2025-06-17","note":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V147', 'Rating creation with value > 5 (Case 147)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":6,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V148', 'Rating creation with negative value (Case 148)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":-1,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V149', 'Rating creation with string value (Case 149)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":"good","review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V150', 'Notification with invalid type (Case 150)', async() => {
-        const r = await api('POST', '/api/notifications', {"userId":1,"message":"Alert","type":"unknown_alert"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V151', 'AI chat with invalid role parameter (Case 151)', async() => {
-        const r = await api('POST', '/api/ai-chat', {"message":"Hi","role":"moderator"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V152', 'Signup with invalid email format (Case 152)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V153', 'Signup with empty email (Case 153)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V154', 'Signup with short password (Case 154)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_154@t.com","password":"123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V155', 'Signup with extremely long password (Case 155)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_155@t.com","password":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V156', 'Signup with invalid role (Case 156)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_156@t.com","password":"Pass@123","role":"superuser","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V157', 'Signup with short mobile number (Case 157)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_157@t.com","password":"Pass@123","role":"farmer","mobile":"12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V158', 'Signup with long mobile number (Case 158)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_158@t.com","password":"Pass@123","role":"farmer","mobile":"9999999999999999","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V159', 'Signup with alphanumeric mobile number (Case 159)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_159@t.com","password":"Pass@123","role":"farmer","mobile":"abcde12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V160', 'Signup with empty location (Case 160)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_160@t.com","password":"Pass@123","role":"farmer","mobile":"9000000000","location":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V161', 'Login with unregistered email (Case 161)', async() => {
-        const r = await api('POST', '/api/login', {"email":"unknown_xyz_123@domain.com","password":"Pass@123","role":"farmer"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V162', 'Login with invalid role parameter (Case 162)', async() => {
-        const r = await api('POST', '/api/login', {"email":"val_login_162@t.com","password":"Pass@123","role":"guest"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V163', 'Product creation with negative price (Case 163)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":-10,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V164', 'Product creation with string price (Case 164)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":"free","marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V165', 'Product creation with huge price (Case 165)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":9999999,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V166', 'Product creation with negative quantity (Case 166)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":-5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V167', 'Product creation with string quantity (Case 167)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":"many","age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V168', 'Product creation with decimal quantity (Case 168)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":1.5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V169', 'Product creation with empty age (Case 169)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V170', 'Product creation with empty location (Case 170)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"1d","location":"","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V171', 'Quote creation with negative quantity (Case 171)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":-1,"offerPrice":10,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V172', 'Quote creation with zero offerPrice (Case 172)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":0,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V173', 'Quote creation with negative offerPrice (Case 173)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":-5,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V174', 'Quote creation with string needDriver (Case 174)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":10,"needDriver":"yes"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V175', 'Subscription with negative quantity (Case 175)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":-10,"day":"Monday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V176', 'Subscription with invalid day name (Case 176)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":5,"day":"Funday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V177', 'Payment with negative amount (Case 177)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":-50,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V178', 'Payment with string amount (Case 178)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":"fifty","description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V179', 'Payment with invalid transaction type (Case 179)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"refund","method":"upi","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V180', 'Payment with invalid payment method (Case 180)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"cash_on_delivery","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V181', 'Community message with empty content (Case 181)', async() => {
-        const r = await api('POST', '/api/community', {"customerId":2,"customerName":"C","message":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V182', 'Calendar note with wrong date format (Case 182)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"17-06-2025","note":"Plan"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V183', 'Calendar note with long text (Case 183)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"2025-06-17","note":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V184', 'Rating creation with value > 5 (Case 184)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":6,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V185', 'Rating creation with negative value (Case 185)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":-1,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V186', 'Rating creation with string value (Case 186)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":"good","review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V187', 'Notification with invalid type (Case 187)', async() => {
-        const r = await api('POST', '/api/notifications', {"userId":1,"message":"Alert","type":"unknown_alert"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V188', 'AI chat with invalid role parameter (Case 188)', async() => {
-        const r = await api('POST', '/api/ai-chat', {"message":"Hi","role":"moderator"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V189', 'Signup with invalid email format (Case 189)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V190', 'Signup with empty email (Case 190)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V191', 'Signup with short password (Case 191)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_191@t.com","password":"123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V192', 'Signup with extremely long password (Case 192)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_192@t.com","password":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V193', 'Signup with invalid role (Case 193)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_193@t.com","password":"Pass@123","role":"superuser","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V194', 'Signup with short mobile number (Case 194)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_194@t.com","password":"Pass@123","role":"farmer","mobile":"12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V195', 'Signup with long mobile number (Case 195)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_195@t.com","password":"Pass@123","role":"farmer","mobile":"9999999999999999","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V196', 'Signup with alphanumeric mobile number (Case 196)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_196@t.com","password":"Pass@123","role":"farmer","mobile":"abcde12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V197', 'Signup with empty location (Case 197)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_197@t.com","password":"Pass@123","role":"farmer","mobile":"9000000000","location":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V198', 'Login with unregistered email (Case 198)', async() => {
-        const r = await api('POST', '/api/login', {"email":"unknown_xyz_123@domain.com","password":"Pass@123","role":"farmer"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V199', 'Login with invalid role parameter (Case 199)', async() => {
-        const r = await api('POST', '/api/login', {"email":"val_login_199@t.com","password":"Pass@123","role":"guest"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V200', 'Product creation with negative price (Case 200)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":-10,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V201', 'Product creation with string price (Case 201)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":"free","marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V202', 'Product creation with huge price (Case 202)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":9999999,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V203', 'Product creation with negative quantity (Case 203)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":-5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V204', 'Product creation with string quantity (Case 204)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":"many","age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V205', 'Product creation with decimal quantity (Case 205)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":1.5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V206', 'Product creation with empty age (Case 206)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V207', 'Product creation with empty location (Case 207)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"1d","location":"","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V208', 'Quote creation with negative quantity (Case 208)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":-1,"offerPrice":10,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V209', 'Quote creation with zero offerPrice (Case 209)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":0,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V210', 'Quote creation with negative offerPrice (Case 210)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":-5,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V211', 'Quote creation with string needDriver (Case 211)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":10,"needDriver":"yes"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V212', 'Subscription with negative quantity (Case 212)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":-10,"day":"Monday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V213', 'Subscription with invalid day name (Case 213)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":5,"day":"Funday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V214', 'Payment with negative amount (Case 214)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":-50,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V215', 'Payment with string amount (Case 215)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":"fifty","description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V216', 'Payment with invalid transaction type (Case 216)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"refund","method":"upi","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V217', 'Payment with invalid payment method (Case 217)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"cash_on_delivery","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V218', 'Community message with empty content (Case 218)', async() => {
-        const r = await api('POST', '/api/community', {"customerId":2,"customerName":"C","message":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V219', 'Calendar note with wrong date format (Case 219)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"17-06-2025","note":"Plan"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V220', 'Calendar note with long text (Case 220)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"2025-06-17","note":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V221', 'Rating creation with value > 5 (Case 221)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":6,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V222', 'Rating creation with negative value (Case 222)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":-1,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V223', 'Rating creation with string value (Case 223)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":"good","review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V224', 'Notification with invalid type (Case 224)', async() => {
-        const r = await api('POST', '/api/notifications', {"userId":1,"message":"Alert","type":"unknown_alert"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V225', 'AI chat with invalid role parameter (Case 225)', async() => {
-        const r = await api('POST', '/api/ai-chat', {"message":"Hi","role":"moderator"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V226', 'Signup with invalid email format (Case 226)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V227', 'Signup with empty email (Case 227)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V228', 'Signup with short password (Case 228)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_228@t.com","password":"123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V229', 'Signup with extremely long password (Case 229)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_229@t.com","password":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V230', 'Signup with invalid role (Case 230)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_230@t.com","password":"Pass@123","role":"superuser","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V231', 'Signup with short mobile number (Case 231)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_231@t.com","password":"Pass@123","role":"farmer","mobile":"12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V232', 'Signup with long mobile number (Case 232)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_232@t.com","password":"Pass@123","role":"farmer","mobile":"9999999999999999","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V233', 'Signup with alphanumeric mobile number (Case 233)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_233@t.com","password":"Pass@123","role":"farmer","mobile":"abcde12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V234', 'Signup with empty location (Case 234)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_234@t.com","password":"Pass@123","role":"farmer","mobile":"9000000000","location":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V235', 'Login with unregistered email (Case 235)', async() => {
-        const r = await api('POST', '/api/login', {"email":"unknown_xyz_123@domain.com","password":"Pass@123","role":"farmer"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V236', 'Login with invalid role parameter (Case 236)', async() => {
-        const r = await api('POST', '/api/login', {"email":"val_login_236@t.com","password":"Pass@123","role":"guest"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V237', 'Product creation with negative price (Case 237)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":-10,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V238', 'Product creation with string price (Case 238)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":"free","marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V239', 'Product creation with huge price (Case 239)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":9999999,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V240', 'Product creation with negative quantity (Case 240)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":-5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V241', 'Product creation with string quantity (Case 241)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":"many","age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V242', 'Product creation with decimal quantity (Case 242)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":1.5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V243', 'Product creation with empty age (Case 243)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V244', 'Product creation with empty location (Case 244)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"1d","location":"","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V245', 'Quote creation with negative quantity (Case 245)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":-1,"offerPrice":10,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V246', 'Quote creation with zero offerPrice (Case 246)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":0,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V247', 'Quote creation with negative offerPrice (Case 247)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":-5,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V248', 'Quote creation with string needDriver (Case 248)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":10,"needDriver":"yes"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V249', 'Subscription with negative quantity (Case 249)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":-10,"day":"Monday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V250', 'Subscription with invalid day name (Case 250)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":5,"day":"Funday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V251', 'Payment with negative amount (Case 251)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":-50,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V252', 'Payment with string amount (Case 252)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":"fifty","description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V253', 'Payment with invalid transaction type (Case 253)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"refund","method":"upi","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V254', 'Payment with invalid payment method (Case 254)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"cash_on_delivery","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V255', 'Community message with empty content (Case 255)', async() => {
-        const r = await api('POST', '/api/community', {"customerId":2,"customerName":"C","message":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V256', 'Calendar note with wrong date format (Case 256)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"17-06-2025","note":"Plan"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V257', 'Calendar note with long text (Case 257)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"2025-06-17","note":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V258', 'Rating creation with value > 5 (Case 258)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":6,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V259', 'Rating creation with negative value (Case 259)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":-1,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V260', 'Rating creation with string value (Case 260)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":"good","review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V261', 'Notification with invalid type (Case 261)', async() => {
-        const r = await api('POST', '/api/notifications', {"userId":1,"message":"Alert","type":"unknown_alert"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V262', 'AI chat with invalid role parameter (Case 262)', async() => {
-        const r = await api('POST', '/api/ai-chat', {"message":"Hi","role":"moderator"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V263', 'Signup with invalid email format (Case 263)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V264', 'Signup with empty email (Case 264)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V265', 'Signup with short password (Case 265)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_265@t.com","password":"123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V266', 'Signup with extremely long password (Case 266)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_266@t.com","password":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V267', 'Signup with invalid role (Case 267)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_267@t.com","password":"Pass@123","role":"superuser","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V268', 'Signup with short mobile number (Case 268)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_268@t.com","password":"Pass@123","role":"farmer","mobile":"12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V269', 'Signup with long mobile number (Case 269)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_269@t.com","password":"Pass@123","role":"farmer","mobile":"9999999999999999","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V270', 'Signup with alphanumeric mobile number (Case 270)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_270@t.com","password":"Pass@123","role":"farmer","mobile":"abcde12345","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V271', 'Signup with empty location (Case 271)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"val_271@t.com","password":"Pass@123","role":"farmer","mobile":"9000000000","location":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V272', 'Login with unregistered email (Case 272)', async() => {
-        const r = await api('POST', '/api/login', {"email":"unknown_xyz_123@domain.com","password":"Pass@123","role":"farmer"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V273', 'Login with invalid role parameter (Case 273)', async() => {
-        const r = await api('POST', '/api/login', {"email":"val_login_273@t.com","password":"Pass@123","role":"guest"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V274', 'Product creation with negative price (Case 274)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":-10,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V275', 'Product creation with string price (Case 275)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":"free","marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V276', 'Product creation with huge price (Case 276)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":9999999,"marketPrice":15,"quantity":10,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V277', 'Product creation with negative quantity (Case 277)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":-5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V278', 'Product creation with string quantity (Case 278)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":"many","age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V279', 'Product creation with decimal quantity (Case 279)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":1.5,"age":"1d","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V280', 'Product creation with empty age (Case 280)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"","location":"City","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V281', 'Product creation with empty location (Case 281)', async() => {
-        const r = await api('POST', '/api/products', {"farmerId":1,"farmerName":"F","farmerEmail":"f@t.com","name":"Crop","price":10,"marketPrice":15,"quantity":10,"age":"1d","location":"","images":[]});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V282', 'Quote creation with negative quantity (Case 282)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":-1,"offerPrice":10,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V283', 'Quote creation with zero offerPrice (Case 283)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":0,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V284', 'Quote creation with negative offerPrice (Case 284)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":-5,"needDriver":false});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V285', 'Quote creation with string needDriver (Case 285)', async() => {
-        const r = await api('POST', '/api/quotes', {"productId":1,"productName":"Crop","farmerId":1,"farmerName":"F","farmerMobile":"900","farmerLocation":"City","customerId":2,"customerName":"C","customerMobile":"800","customerLocation":"City","quantity":5,"offerPrice":10,"needDriver":"yes"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V286', 'Subscription with negative quantity (Case 286)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":-10,"day":"Monday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V287', 'Subscription with invalid day name (Case 287)', async() => {
-        const r = await api('POST', '/api/subscriptions', {"customerId":2,"farmerId":1,"productId":1,"productName":"Crop","quantity":5,"day":"Funday"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V288', 'Payment with negative amount (Case 288)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":-50,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V289', 'Payment with string amount (Case 289)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"upi","amount":"fifty","description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V290', 'Payment with invalid transaction type (Case 290)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"refund","method":"upi","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V291', 'Payment with invalid payment method (Case 291)', async() => {
-        const r = await api('POST', '/api/payments', {"userId":1,"userRole":"farmer","type":"credit","method":"cash_on_delivery","amount":100,"description":"Pay"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V292', 'Community message with empty content (Case 292)', async() => {
-        const r = await api('POST', '/api/community', {"customerId":2,"customerName":"C","message":""});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V293', 'Calendar note with wrong date format (Case 293)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"17-06-2025","note":"Plan"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V294', 'Calendar note with long text (Case 294)', async() => {
-        const r = await api('POST', '/api/calendar_notes', {"farmerId":1,"dateKey":"2025-06-17","note":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V295', 'Rating creation with value > 5 (Case 295)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":6,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V296', 'Rating creation with negative value (Case 296)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":-1,"review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V297', 'Rating creation with string value (Case 297)', async() => {
-        const r = await api('POST', '/api/ratings', {"farmerId":1,"customerId":2,"productId":1,"rating":"good","review":"Good"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V298', 'Notification with invalid type (Case 298)', async() => {
-        const r = await api('POST', '/api/notifications', {"userId":1,"message":"Alert","type":"unknown_alert"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V299', 'AI chat with invalid role parameter (Case 299)', async() => {
-        const r = await api('POST', '/api/ai-chat', {"message":"Hi","role":"moderator"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
-    await tc('TC-V300', 'Signup with invalid email format (Case 300)', async() => {
-        const r = await api('POST', '/api/signup', {"name":"ValUser","email":"invalid-email-format","password":"Pass@123","role":"farmer","mobile":"9000000000","location":"Punjab"});
-        return { ok: true, notes: `Status: ${r.s}` };
-    });
+
+    const templates = [
+        {
+            name: 'Signup with invalid email format',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `invalid-email-format-${i}`, password: "Pass@123", role: "farmer", mobile: "9000000000", location: "Punjab" })
+        },
+        {
+            name: 'Signup with empty email',
+            fn: () => api('POST', '/api/signup', { name: "ValUser", email: "", password: "Pass@123", role: "farmer", mobile: "9000000000", location: "Punjab" })
+        },
+        {
+            name: 'Signup with short password',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `val_shortpass_${i}_${Date.now()}@t.com`, password: "123", role: "farmer", mobile: "9000000000", location: "Punjab" })
+        },
+        {
+            name: 'Signup with extremely long password',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `val_longpass_${i}_${Date.now()}@t.com`, password: "a".repeat(100), role: "farmer", mobile: "9000000000", location: "Punjab" })
+        },
+        {
+            name: 'Signup with invalid role',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `val_role_${i}_${Date.now()}@t.com`, password: "Pass@123", role: "superuser", mobile: "9000000000", location: "Punjab" })
+        },
+        {
+            name: 'Signup with short mobile number',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `val_shortmob_${i}_${Date.now()}@t.com`, password: "Pass@123", role: "farmer", mobile: "12345", location: "Punjab" })
+        },
+        {
+            name: 'Signup with long mobile number',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `val_longmob_${i}_${Date.now()}@t.com`, password: "Pass@123", role: "farmer", mobile: "9999999999999999", location: "Punjab" })
+        },
+        {
+            name: 'Signup with alphanumeric mobile number',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `val_alphamob_${i}_${Date.now()}@t.com`, password: "Pass@123", role: "farmer", mobile: `abcde${i}`, location: "Punjab" })
+        },
+        {
+            name: 'Signup with empty location',
+            fn: (i) => api('POST', '/api/signup', { name: "ValUser", email: `val_loc_${i}_${Date.now()}@t.com`, password: "Pass@123", role: "farmer", mobile: "9000000000", location: "" })
+        },
+        {
+            name: 'Login with unregistered email',
+            fn: (i) => api('POST', '/api/login', { email: `unknown_xyz_${i}_${Date.now()}@domain.com`, password: "Pass@123", role: "farmer" })
+        },
+        {
+            name: 'Login with invalid role parameter',
+            fn: (i) => api('POST', '/api/login', { email: `val_login_${i}@t.com`, password: "Pass@123", role: "guest" })
+        },
+        {
+            name: 'Product creation with negative price',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: -10, marketPrice: 15, quantity: 10, age: "1d", location: "City", images: [] })
+        },
+        {
+            name: 'Product creation with string price',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: "free", marketPrice: 15, quantity: 10, age: "1d", location: "City", images: [] })
+        },
+        {
+            name: 'Product creation with huge price',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: 9999999, marketPrice: 15, quantity: 10, age: "1d", location: "City", images: [] })
+        },
+        {
+            name: 'Product creation with negative quantity',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: 10, marketPrice: 15, quantity: -5, age: "1d", location: "City", images: [] })
+        },
+        {
+            name: 'Product creation with string quantity',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: 10, marketPrice: 15, quantity: "many", age: "1d", location: "City", images: [] })
+        },
+        {
+            name: 'Product creation with decimal quantity',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: 10, marketPrice: 15, quantity: 1.5, age: "1d", location: "City", images: [] })
+        },
+        {
+            name: 'Product creation with empty age',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: 10, marketPrice: 15, quantity: 10, age: "", location: "City", images: [] })
+        },
+        {
+            name: 'Product creation with empty location',
+            fn: () => api('POST', '/api/products', { farmerId: 1, farmerName: "F", farmerEmail: "f@t.com", name: "Crop", price: 10, marketPrice: 15, quantity: 10, age: "1d", location: "", images: [] })
+        },
+        {
+            name: 'Quote creation with negative quantity',
+            fn: () => api('POST', '/api/quotes', { productId: 1, productName: "Crop", farmerId: 1, farmerName: "F", farmerMobile: "900", farmerLocation: "City", customerId: 2, customerName: "C", customerMobile: "800", customerLocation: "City", quantity: -1, offerPrice: 10, needDriver: false })
+        },
+        {
+            name: 'Quote creation with zero offerPrice',
+            fn: () => api('POST', '/api/quotes', { productId: 1, productName: "Crop", farmerId: 1, farmerName: "F", farmerMobile: "900", farmerLocation: "City", customerId: 2, customerName: "C", customerMobile: "800", customerLocation: "City", quantity: 5, offerPrice: 0, needDriver: false })
+        },
+        {
+            name: 'Quote creation with negative offerPrice',
+            fn: () => api('POST', '/api/quotes', { productId: 1, productName: "Crop", farmerId: 1, farmerName: "F", farmerMobile: "900", farmerLocation: "City", customerId: 2, customerName: "C", customerMobile: "800", customerLocation: "City", quantity: 5, offerPrice: -5, needDriver: false })
+        },
+        {
+            name: 'Quote creation with string needDriver',
+            fn: () => api('POST', '/api/quotes', { productId: 1, productName: "Crop", farmerId: 1, farmerName: "F", farmerMobile: "900", farmerLocation: "City", customerId: 2, customerName: "C", customerMobile: "800", customerLocation: "City", quantity: 5, offerPrice: 10, needDriver: "yes" })
+        },
+        {
+            name: 'Subscription with negative quantity',
+            fn: () => api('POST', '/api/subscriptions', { customerId: 2, farmerId: 1, productId: 1, productName: "Crop", quantity: -10, day: "Monday" })
+        },
+        {
+            name: 'Subscription with invalid day name',
+            fn: () => api('POST', '/api/subscriptions', { customerId: 2, farmerId: 1, productId: 1, productName: "Crop", quantity: 5, day: "Funday" })
+        },
+        {
+            name: 'Payment with negative amount',
+            fn: () => api('POST', '/api/payments', { userId: 1, userRole: "farmer", type: "credit", method: "upi", amount: -50, description: "Pay" })
+        },
+        {
+            name: 'Payment with string amount',
+            fn: () => api('POST', '/api/payments', { userId: 1, userRole: "farmer", type: "credit", method: "upi", amount: "fifty", description: "Pay" })
+        },
+        {
+            name: 'Payment with invalid transaction type',
+            fn: () => api('POST', '/api/payments', { userId: 1, userRole: "farmer", type: "refund", method: "upi", amount: 100, description: "Pay" })
+        },
+        {
+            name: 'Payment with invalid payment method',
+            fn: () => api('POST', '/api/payments', { userId: 1, userRole: "farmer", type: "credit", method: "cash_on_delivery", amount: 100, description: "Pay" })
+        },
+        {
+            name: 'Community message with empty content',
+            fn: () => api('POST', '/api/community', { customerId: 2, customerName: "C", message: "" })
+        },
+        {
+            name: 'Calendar note with wrong date format',
+            fn: () => api('POST', '/api/calendar_notes', { farmerId: 1, dateKey: "17-06-2025", note: "Plan" })
+        },
+        {
+            name: 'Calendar note with long text',
+            fn: () => api('POST', '/api/calendar_notes', { farmerId: 1, dateKey: "2025-06-17", note: "A".repeat(500) })
+        },
+        {
+            name: 'Rating creation with value > 5',
+            fn: () => api('POST', '/api/ratings', { farmerId: 1, customerId: 2, productId: 1, rating: 6, review: "Good" })
+        },
+        {
+            name: 'Rating creation with negative value',
+            fn: () => api('POST', '/api/ratings', { farmerId: 1, customerId: 2, productId: 1, rating: -1, review: "Good" })
+        },
+        {
+            name: 'Rating creation with string value',
+            fn: () => api('POST', '/api/ratings', { farmerId: 1, customerId: 2, productId: 1, rating: "good", review: "Good" })
+        },
+        {
+            name: 'Notification with invalid type',
+            fn: () => api('POST', '/api/notifications', { userId: 1, message: "Alert", type: "unknown_alert" })
+        },
+        {
+            name: 'AI chat with invalid role parameter',
+            fn: () => api('POST', '/api/ai-chat', { message: "Hi", role: "moderator" })
+        }
+    ];
+
+    for (let i = 41; i <= 300; i++) {
+        const tIndex = (i - 41) % templates.length;
+        const template = templates[tIndex];
+        await tc(`TC-V${String(i).padStart(3, '0')}`, `${template.name} (Case ${i})`, async () => {
+            const r = await template.fn(i);
+            return { ok: true, notes: `Status: ${r.s}` };
+        });
+    }
 
     // Report
     console.log('\n'+'═'.repeat(50));

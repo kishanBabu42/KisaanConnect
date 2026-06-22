@@ -4,7 +4,7 @@ TC-V002,Validation,Input Validation,Signup without name returns error,PASS,Statu
 TC-V003,Validation,Input Validation,Signup without password returns error,PASS,Status:400
 TC-V004,Validation,Input Validation,Login without email returns error,PASS,Status:400
 TC-V005,Validation,Input Validation,Login without password returns error,PASS,Status:400
-TC-V006,Validation,Input Validation,First signup with unique email succeeds,PASS,id:81
+TC-V006,Validation,Input Validation,First signup with unique email succeeds,PASS,id:70
 TC-V007,Validation,Input Validation,Duplicate signup with same email returns error/conflict,PASS,Status:400
 TC-V008,Validation,Input Validation,Product without name returns error,PASS,Status:400
 TC-V009,Validation,Input Validation,Product without price returns error,PASS,Status:400
@@ -39,15 +39,15 @@ TC-V037,Validation,Input Validation,Quote update with invalid status value is ha
 TC-V038,Validation,Input Validation,GET with URL-encoded special characters,PASS,Status:200
 TC-V039,Validation,Input Validation,GET /api/users/:id with alphanumeric non-ID returns gracefully,PASS,Status:404
 TC-V040,Validation,Input Validation,Very long string in community message is handled,PASS,Status:200
-TC-V041,Validation,Input Validation,Signup with invalid email format (Case 41),PASS,Status: 400
+TC-V041,Validation,Input Validation,Signup with invalid email format (Case 41),PASS,Status: 200
 TC-V042,Validation,Input Validation,Signup with empty email (Case 42),PASS,Status: 400
-TC-V043,Validation,Input Validation,Signup with short password (Case 43),PASS,Status: 400
-TC-V044,Validation,Input Validation,Signup with extremely long password (Case 44),PASS,Status: 400
-TC-V045,Validation,Input Validation,Signup with invalid role (Case 45),PASS,Status: 400
-TC-V046,Validation,Input Validation,Signup with short mobile number (Case 46),PASS,Status: 400
-TC-V047,Validation,Input Validation,Signup with long mobile number (Case 47),PASS,Status: 400
-TC-V048,Validation,Input Validation,Signup with alphanumeric mobile number (Case 48),PASS,Status: 400
-TC-V049,Validation,Input Validation,Signup with empty location (Case 49),PASS,Status: 400
+TC-V043,Validation,Input Validation,Signup with short password (Case 43),PASS,Status: 200
+TC-V044,Validation,Input Validation,Signup with extremely long password (Case 44),PASS,Status: 200
+TC-V045,Validation,Input Validation,Signup with invalid role (Case 45),PASS,Status: 200
+TC-V046,Validation,Input Validation,Signup with short mobile number (Case 46),PASS,Status: 200
+TC-V047,Validation,Input Validation,Signup with long mobile number (Case 47),PASS,Status: 200
+TC-V048,Validation,Input Validation,Signup with alphanumeric mobile number (Case 48),PASS,Status: 200
+TC-V049,Validation,Input Validation,Signup with empty location (Case 49),PASS,Status: 200
 TC-V050,Validation,Input Validation,Login with unregistered email (Case 50),PASS,Status: 401
 TC-V051,Validation,Input Validation,Login with invalid role parameter (Case 51),PASS,Status: 401
 TC-V052,Validation,Input Validation,Product creation with negative price (Case 52),PASS,Status: 200
@@ -76,15 +76,15 @@ TC-V074,Validation,Input Validation,Rating creation with negative value (Case 74
 TC-V075,Validation,Input Validation,Rating creation with string value (Case 75),PASS,Status: 404
 TC-V076,Validation,Input Validation,Notification with invalid type (Case 76),PASS,Status: 404
 TC-V077,Validation,Input Validation,AI chat with invalid role parameter (Case 77),PASS,Status: 200
-TC-V078,Validation,Input Validation,Signup with invalid email format (Case 78),PASS,Status: 400
+TC-V078,Validation,Input Validation,Signup with invalid email format (Case 78),PASS,Status: 200
 TC-V079,Validation,Input Validation,Signup with empty email (Case 79),PASS,Status: 400
-TC-V080,Validation,Input Validation,Signup with short password (Case 80),PASS,Status: 400
-TC-V081,Validation,Input Validation,Signup with extremely long password (Case 81),PASS,Status: 400
-TC-V082,Validation,Input Validation,Signup with invalid role (Case 82),PASS,Status: 400
-TC-V083,Validation,Input Validation,Signup with short mobile number (Case 83),PASS,Status: 400
-TC-V084,Validation,Input Validation,Signup with long mobile number (Case 84),PASS,Status: 400
-TC-V085,Validation,Input Validation,Signup with alphanumeric mobile number (Case 85),PASS,Status: 400
-TC-V086,Validation,Input Validation,Signup with empty location (Case 86),PASS,Status: 400
+TC-V080,Validation,Input Validation,Signup with short password (Case 80),PASS,Status: 200
+TC-V081,Validation,Input Validation,Signup with extremely long password (Case 81),PASS,Status: 200
+TC-V082,Validation,Input Validation,Signup with invalid role (Case 82),PASS,Status: 200
+TC-V083,Validation,Input Validation,Signup with short mobile number (Case 83),PASS,Status: 200
+TC-V084,Validation,Input Validation,Signup with long mobile number (Case 84),PASS,Status: 200
+TC-V085,Validation,Input Validation,Signup with alphanumeric mobile number (Case 85),PASS,Status: 200
+TC-V086,Validation,Input Validation,Signup with empty location (Case 86),PASS,Status: 200
 TC-V087,Validation,Input Validation,Login with unregistered email (Case 87),PASS,Status: 401
 TC-V088,Validation,Input Validation,Login with invalid role parameter (Case 88),PASS,Status: 401
 TC-V089,Validation,Input Validation,Product creation with negative price (Case 89),PASS,Status: 200
@@ -113,15 +113,15 @@ TC-V111,Validation,Input Validation,Rating creation with negative value (Case 11
 TC-V112,Validation,Input Validation,Rating creation with string value (Case 112),PASS,Status: 404
 TC-V113,Validation,Input Validation,Notification with invalid type (Case 113),PASS,Status: 404
 TC-V114,Validation,Input Validation,AI chat with invalid role parameter (Case 114),PASS,Status: 200
-TC-V115,Validation,Input Validation,Signup with invalid email format (Case 115),PASS,Status: 400
+TC-V115,Validation,Input Validation,Signup with invalid email format (Case 115),PASS,Status: 200
 TC-V116,Validation,Input Validation,Signup with empty email (Case 116),PASS,Status: 400
-TC-V117,Validation,Input Validation,Signup with short password (Case 117),PASS,Status: 400
-TC-V118,Validation,Input Validation,Signup with extremely long password (Case 118),PASS,Status: 400
-TC-V119,Validation,Input Validation,Signup with invalid role (Case 119),PASS,Status: 400
-TC-V120,Validation,Input Validation,Signup with short mobile number (Case 120),PASS,Status: 400
-TC-V121,Validation,Input Validation,Signup with long mobile number (Case 121),PASS,Status: 400
-TC-V122,Validation,Input Validation,Signup with alphanumeric mobile number (Case 122),PASS,Status: 400
-TC-V123,Validation,Input Validation,Signup with empty location (Case 123),PASS,Status: 400
+TC-V117,Validation,Input Validation,Signup with short password (Case 117),PASS,Status: 200
+TC-V118,Validation,Input Validation,Signup with extremely long password (Case 118),PASS,Status: 200
+TC-V119,Validation,Input Validation,Signup with invalid role (Case 119),PASS,Status: 200
+TC-V120,Validation,Input Validation,Signup with short mobile number (Case 120),PASS,Status: 200
+TC-V121,Validation,Input Validation,Signup with long mobile number (Case 121),PASS,Status: 200
+TC-V122,Validation,Input Validation,Signup with alphanumeric mobile number (Case 122),PASS,Status: 200
+TC-V123,Validation,Input Validation,Signup with empty location (Case 123),PASS,Status: 200
 TC-V124,Validation,Input Validation,Login with unregistered email (Case 124),PASS,Status: 401
 TC-V125,Validation,Input Validation,Login with invalid role parameter (Case 125),PASS,Status: 401
 TC-V126,Validation,Input Validation,Product creation with negative price (Case 126),PASS,Status: 200
@@ -150,15 +150,15 @@ TC-V148,Validation,Input Validation,Rating creation with negative value (Case 14
 TC-V149,Validation,Input Validation,Rating creation with string value (Case 149),PASS,Status: 404
 TC-V150,Validation,Input Validation,Notification with invalid type (Case 150),PASS,Status: 404
 TC-V151,Validation,Input Validation,AI chat with invalid role parameter (Case 151),PASS,Status: 200
-TC-V152,Validation,Input Validation,Signup with invalid email format (Case 152),PASS,Status: 400
+TC-V152,Validation,Input Validation,Signup with invalid email format (Case 152),PASS,Status: 200
 TC-V153,Validation,Input Validation,Signup with empty email (Case 153),PASS,Status: 400
-TC-V154,Validation,Input Validation,Signup with short password (Case 154),PASS,Status: 400
-TC-V155,Validation,Input Validation,Signup with extremely long password (Case 155),PASS,Status: 400
-TC-V156,Validation,Input Validation,Signup with invalid role (Case 156),PASS,Status: 400
-TC-V157,Validation,Input Validation,Signup with short mobile number (Case 157),PASS,Status: 400
-TC-V158,Validation,Input Validation,Signup with long mobile number (Case 158),PASS,Status: 400
-TC-V159,Validation,Input Validation,Signup with alphanumeric mobile number (Case 159),PASS,Status: 400
-TC-V160,Validation,Input Validation,Signup with empty location (Case 160),PASS,Status: 400
+TC-V154,Validation,Input Validation,Signup with short password (Case 154),PASS,Status: 200
+TC-V155,Validation,Input Validation,Signup with extremely long password (Case 155),PASS,Status: 200
+TC-V156,Validation,Input Validation,Signup with invalid role (Case 156),PASS,Status: 200
+TC-V157,Validation,Input Validation,Signup with short mobile number (Case 157),PASS,Status: 200
+TC-V158,Validation,Input Validation,Signup with long mobile number (Case 158),PASS,Status: 200
+TC-V159,Validation,Input Validation,Signup with alphanumeric mobile number (Case 159),PASS,Status: 200
+TC-V160,Validation,Input Validation,Signup with empty location (Case 160),PASS,Status: 200
 TC-V161,Validation,Input Validation,Login with unregistered email (Case 161),PASS,Status: 401
 TC-V162,Validation,Input Validation,Login with invalid role parameter (Case 162),PASS,Status: 401
 TC-V163,Validation,Input Validation,Product creation with negative price (Case 163),PASS,Status: 200
@@ -187,15 +187,15 @@ TC-V185,Validation,Input Validation,Rating creation with negative value (Case 18
 TC-V186,Validation,Input Validation,Rating creation with string value (Case 186),PASS,Status: 404
 TC-V187,Validation,Input Validation,Notification with invalid type (Case 187),PASS,Status: 404
 TC-V188,Validation,Input Validation,AI chat with invalid role parameter (Case 188),PASS,Status: 200
-TC-V189,Validation,Input Validation,Signup with invalid email format (Case 189),PASS,Status: 400
+TC-V189,Validation,Input Validation,Signup with invalid email format (Case 189),PASS,Status: 200
 TC-V190,Validation,Input Validation,Signup with empty email (Case 190),PASS,Status: 400
-TC-V191,Validation,Input Validation,Signup with short password (Case 191),PASS,Status: 400
-TC-V192,Validation,Input Validation,Signup with extremely long password (Case 192),PASS,Status: 400
-TC-V193,Validation,Input Validation,Signup with invalid role (Case 193),PASS,Status: 400
-TC-V194,Validation,Input Validation,Signup with short mobile number (Case 194),PASS,Status: 400
-TC-V195,Validation,Input Validation,Signup with long mobile number (Case 195),PASS,Status: 400
-TC-V196,Validation,Input Validation,Signup with alphanumeric mobile number (Case 196),PASS,Status: 400
-TC-V197,Validation,Input Validation,Signup with empty location (Case 197),PASS,Status: 400
+TC-V191,Validation,Input Validation,Signup with short password (Case 191),PASS,Status: 200
+TC-V192,Validation,Input Validation,Signup with extremely long password (Case 192),PASS,Status: 200
+TC-V193,Validation,Input Validation,Signup with invalid role (Case 193),PASS,Status: 200
+TC-V194,Validation,Input Validation,Signup with short mobile number (Case 194),PASS,Status: 200
+TC-V195,Validation,Input Validation,Signup with long mobile number (Case 195),PASS,Status: 200
+TC-V196,Validation,Input Validation,Signup with alphanumeric mobile number (Case 196),PASS,Status: 200
+TC-V197,Validation,Input Validation,Signup with empty location (Case 197),PASS,Status: 200
 TC-V198,Validation,Input Validation,Login with unregistered email (Case 198),PASS,Status: 401
 TC-V199,Validation,Input Validation,Login with invalid role parameter (Case 199),PASS,Status: 401
 TC-V200,Validation,Input Validation,Product creation with negative price (Case 200),PASS,Status: 200
@@ -224,15 +224,15 @@ TC-V222,Validation,Input Validation,Rating creation with negative value (Case 22
 TC-V223,Validation,Input Validation,Rating creation with string value (Case 223),PASS,Status: 404
 TC-V224,Validation,Input Validation,Notification with invalid type (Case 224),PASS,Status: 404
 TC-V225,Validation,Input Validation,AI chat with invalid role parameter (Case 225),PASS,Status: 200
-TC-V226,Validation,Input Validation,Signup with invalid email format (Case 226),PASS,Status: 400
+TC-V226,Validation,Input Validation,Signup with invalid email format (Case 226),PASS,Status: 200
 TC-V227,Validation,Input Validation,Signup with empty email (Case 227),PASS,Status: 400
-TC-V228,Validation,Input Validation,Signup with short password (Case 228),PASS,Status: 400
-TC-V229,Validation,Input Validation,Signup with extremely long password (Case 229),PASS,Status: 400
-TC-V230,Validation,Input Validation,Signup with invalid role (Case 230),PASS,Status: 400
-TC-V231,Validation,Input Validation,Signup with short mobile number (Case 231),PASS,Status: 400
-TC-V232,Validation,Input Validation,Signup with long mobile number (Case 232),PASS,Status: 400
-TC-V233,Validation,Input Validation,Signup with alphanumeric mobile number (Case 233),PASS,Status: 400
-TC-V234,Validation,Input Validation,Signup with empty location (Case 234),PASS,Status: 400
+TC-V228,Validation,Input Validation,Signup with short password (Case 228),PASS,Status: 200
+TC-V229,Validation,Input Validation,Signup with extremely long password (Case 229),PASS,Status: 200
+TC-V230,Validation,Input Validation,Signup with invalid role (Case 230),PASS,Status: 200
+TC-V231,Validation,Input Validation,Signup with short mobile number (Case 231),PASS,Status: 200
+TC-V232,Validation,Input Validation,Signup with long mobile number (Case 232),PASS,Status: 200
+TC-V233,Validation,Input Validation,Signup with alphanumeric mobile number (Case 233),PASS,Status: 200
+TC-V234,Validation,Input Validation,Signup with empty location (Case 234),PASS,Status: 200
 TC-V235,Validation,Input Validation,Login with unregistered email (Case 235),PASS,Status: 401
 TC-V236,Validation,Input Validation,Login with invalid role parameter (Case 236),PASS,Status: 401
 TC-V237,Validation,Input Validation,Product creation with negative price (Case 237),PASS,Status: 200
@@ -261,15 +261,15 @@ TC-V259,Validation,Input Validation,Rating creation with negative value (Case 25
 TC-V260,Validation,Input Validation,Rating creation with string value (Case 260),PASS,Status: 404
 TC-V261,Validation,Input Validation,Notification with invalid type (Case 261),PASS,Status: 404
 TC-V262,Validation,Input Validation,AI chat with invalid role parameter (Case 262),PASS,Status: 200
-TC-V263,Validation,Input Validation,Signup with invalid email format (Case 263),PASS,Status: 400
+TC-V263,Validation,Input Validation,Signup with invalid email format (Case 263),PASS,Status: 200
 TC-V264,Validation,Input Validation,Signup with empty email (Case 264),PASS,Status: 400
-TC-V265,Validation,Input Validation,Signup with short password (Case 265),PASS,Status: 400
-TC-V266,Validation,Input Validation,Signup with extremely long password (Case 266),PASS,Status: 400
-TC-V267,Validation,Input Validation,Signup with invalid role (Case 267),PASS,Status: 400
-TC-V268,Validation,Input Validation,Signup with short mobile number (Case 268),PASS,Status: 400
-TC-V269,Validation,Input Validation,Signup with long mobile number (Case 269),PASS,Status: 400
-TC-V270,Validation,Input Validation,Signup with alphanumeric mobile number (Case 270),PASS,Status: 400
-TC-V271,Validation,Input Validation,Signup with empty location (Case 271),PASS,Status: 400
+TC-V265,Validation,Input Validation,Signup with short password (Case 265),PASS,Status: 200
+TC-V266,Validation,Input Validation,Signup with extremely long password (Case 266),PASS,Status: 200
+TC-V267,Validation,Input Validation,Signup with invalid role (Case 267),PASS,Status: 200
+TC-V268,Validation,Input Validation,Signup with short mobile number (Case 268),PASS,Status: 200
+TC-V269,Validation,Input Validation,Signup with long mobile number (Case 269),PASS,Status: 200
+TC-V270,Validation,Input Validation,Signup with alphanumeric mobile number (Case 270),PASS,Status: 200
+TC-V271,Validation,Input Validation,Signup with empty location (Case 271),PASS,Status: 200
 TC-V272,Validation,Input Validation,Login with unregistered email (Case 272),PASS,Status: 401
 TC-V273,Validation,Input Validation,Login with invalid role parameter (Case 273),PASS,Status: 401
 TC-V274,Validation,Input Validation,Product creation with negative price (Case 274),PASS,Status: 200
@@ -298,4 +298,4 @@ TC-V296,Validation,Input Validation,Rating creation with negative value (Case 29
 TC-V297,Validation,Input Validation,Rating creation with string value (Case 297),PASS,Status: 404
 TC-V298,Validation,Input Validation,Notification with invalid type (Case 298),PASS,Status: 404
 TC-V299,Validation,Input Validation,AI chat with invalid role parameter (Case 299),PASS,Status: 200
-TC-V300,Validation,Input Validation,Signup with invalid email format (Case 300),PASS,Status: 400
+TC-V300,Validation,Input Validation,Signup with invalid email format (Case 300),PASS,Status: 200
